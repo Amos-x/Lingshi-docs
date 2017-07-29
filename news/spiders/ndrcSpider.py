@@ -14,7 +14,7 @@ class NdrcspiderSpider(scrapy.Spider):
     searchKey = ['铜', '铝', '铅', '锌', '债券', '拆借', '美元', '黄金', '原油', '矿', 'COPPER', 'mine', 'lending rates', 'bonds']
 
     def start_requests(self):
-        print('开始运行ndrc...')
+        print('start crawling ndrc...')
         today = str(datetime.datetime.today())[:10]
         url='http://www.ndrc.gov.cn/fgwSearch/searchResult.jsp'
         for key in self.searchKey:
@@ -57,7 +57,7 @@ class NdrcspiderSpider(scrapy.Spider):
                                          callback=self.parse_content,
                                          meta={'title':item['title']})
                 except:
-                    print('NDRC,错误，忽略错误项')
+                    print('NDRC,Homepage Error')
             # 进行换页,回调
             lat_time = result_list[-1].css('font.dateShow').extract_first()
             if self.time_judgement(lat_time):
@@ -91,7 +91,7 @@ class NdrcspiderSpider(scrapy.Spider):
                 item['url'] = response.url
                 yield item
         except:
-            print('NDRC，内容解析错误，忽略错误项')
+            print('NDRC，Content Error')
 
     #去除html中特殊的符号
     def replaceCharEntity(self,htmlstr):

@@ -13,7 +13,7 @@ class MiitspiderSpider(scrapy.Spider):
     start_urls = 'http://searchweb.miit.gov.cn/search/search'
 
     def start_requests(self):
-        print('开始运行miit...')
+        print('start crawling miit...')
         keywords = ['铜', '铝', '铅', '锌', '债券', '拆借', '美元', '黄金', '原油', '矿']
         for keyword in keywords:
             yield FormRequest(url=self.start_urls,
@@ -46,7 +46,7 @@ class MiitspiderSpider(scrapy.Spider):
                 yield item
                 yield scrapy.Request(news['url'],callback=self.parse,meta={'url':news['url']})
             except:
-                print('MIIT错误，忽略错误项')
+                print('MIIT,Homepage Error')
         if self._time_judgment(new_list[-1]['showTime']):
             yield FormRequest(url=self.start_urls[0],
                               formdata={'pageSize': '10', 'pageNow': str(page_now + 1), 'sortFlag': '-1', 'sortKey': 'showTime',
@@ -89,7 +89,7 @@ class MiitspiderSpider(scrapy.Spider):
                 item['file_urls'] = None
             yield item
         except:
-            print('MIIT错误，内容解析错误，忽略错误项')
+            print('MIIT,Content Error')
 
     def replaceCharEntity(self,htmlstr):
         CHAR_ENTITIES = {'nbsp': ' ', '160': ' ',

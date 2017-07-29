@@ -12,7 +12,7 @@ class YahooSpider(scrapy.Spider):
     custom_settings = {'USER_AGENT':None}
 
     def start_requests(self):
-        print('开始运行yahoo...')
+        print('satrt crawling yahoo...')
         keywords = ['copper', 'bonds', 'mine', 'lending rates']
         pages = ['0','11','21','31','41','51','61','71','81','91']
         for keyword in keywords:
@@ -42,7 +42,7 @@ class YahooSpider(scrapy.Spider):
                     yield item
                     yield scrapy.Request(item['url'], callback=self.parse, meta={'url': item['url']})
         except:
-            print('YAHOO，错误，忽略错误项')
+            print('YAHOO，Homepage Error')
     # 爬取新闻内容
     def parse(self, response):
         try:
@@ -72,4 +72,4 @@ class YahooSpider(scrapy.Spider):
             item['file_urls'] = None
             yield item
         except:
-            print('YAHOO,内容解析错误，忽略错误项')
+            print('YAHOO,Content Error')

@@ -14,7 +14,7 @@ class SmmSpider(scrapy.Spider):
 
     def start_requests(self):
         keywords =['铜','铝','铅','锌']
-        print('开始运行 SMM...')
+        print('start crawling SMM...')
         for keyword in keywords:
             key_encode = urllib.request.quote('要闻/'+keyword)
             url = 'https://platform.smm.cn/newscenter/news/list/'+key_encode+'/1?page_limit=30'
@@ -42,7 +42,7 @@ class SmmSpider(scrapy.Spider):
                 yield item
                 yield scrapy.Request(item['url'],callback=self.parse,meta={'source':news['Source'],'url':item['url']})
             except:
-                print('SMM，错误，忽略错误项')
+                print('SMM，Homepage Error')
 
     def parse(self, response):
         try:
@@ -63,4 +63,4 @@ class SmmSpider(scrapy.Spider):
             item['file_urls'] = None
             yield item
         except:
-            print('SMM，内容解析错误，忽略错误项')
+            print('SMM，Content Error')

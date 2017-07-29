@@ -43,7 +43,7 @@ class save_to_mongo(object):
                 self.db['second'].insert(dict(item))
             return item
         except:
-            print('插入数据库错误')
+            print('insert datadb ERROR ')
 
 class ImageDownloadPipeline(ImagesPipeline):
 
@@ -78,7 +78,7 @@ class ImageDownloadPipeline(ImagesPipeline):
                 for x in range(len(img_paths)):
                     item['content'] = re.sub(r'<img (.*?)>','<img src="'+img_paths[x] +'">',item['content'],1)
         except:
-            raise DropItem('图片管道错误')
+            raise DropItem('ImagePipeline Error')
         return item
 
 class FileDownloadPipeline(FilesPipeline):
@@ -108,7 +108,7 @@ class FileDownloadPipeline(FilesPipeline):
                 else:
                     item['file_paths'] = None
         except:
-            raise DropItem('文件管道错误')
+            raise DropItem('FilePipeline Error')
         return item
 
 class save_to_mysql(object):

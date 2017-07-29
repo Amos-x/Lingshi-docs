@@ -38,7 +38,7 @@ class PbcSpider(scrapy.Spider):
         yield scrapy.Request('http://wzdig.pbc.gov.cn:8080/dig/ui/search.action',callback=self.parse,dont_filter=True)
 
     def parse(self, response):
-        print('开始运行pbc...')
+        print('satrt crawling pbc...')
         for keyword in self.keywords:
             try:
                 self.browser.get(response.url)
@@ -63,7 +63,7 @@ class PbcSpider(scrapy.Spider):
                     yield item
                     yield scrapy.Request(item['url'], callback=self.last_parse)
             except:
-                print('PBC,错误，忽略错误项')
+                print('PBC,Homepage Error')
 
     def last_parse(self, response):
         try:
@@ -105,5 +105,5 @@ class PbcSpider(scrapy.Spider):
                         #     item2['video'] = None
                         yield item2
         except:
-            print('PBC,内容解析错误,忽略错误项')
+            print('PBC,Content Error')
 

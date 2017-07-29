@@ -11,7 +11,7 @@ class CnbcspiderSpider(scrapy.Spider):
     name = 'cnbcSpider'
 
     def start_requests(self):
-        print('开始运行cnbc...')
+        print('start crawking cnbc...')
         keywords =['dollar','lending rates','bonds','cpooer']
         for keyword in keywords:
             url = ('http://search.cnbc.com/rs/search/view.html?partnerId=2000&keywords='
@@ -36,7 +36,7 @@ class CnbcspiderSpider(scrapy.Spider):
                 yield item
                 yield scrapy.Request(mLink, callback=self.parse, meta={'mLink': mLink,'source':source})
             except:
-                print('CNBC，错误,忽略错误项')
+                print('CNBC，Homepage Error')
         #翻页
         if searchResultCards:
             url = response.url[0:-1] + str(response.meta['page']+1)
@@ -78,7 +78,7 @@ class CnbcspiderSpider(scrapy.Spider):
                 item['content'] = self._parse_text(response=response)
                 yield item
         except:
-            print('CNBC,内容解析错误,忽略错误项')
+            print('CNBC,Content Error')
 
     def _parse_text(self,response,results=None):
         """解析正文"""
@@ -118,7 +118,7 @@ class CnbcspiderSpider(scrapy.Spider):
                     mContent.append('<p><img src=' + imgSrc + '></p>')
             return mContent
         except:
-            print('CNBC内容解析函数错误，请检查')
+            print('CNBC,content function Error')
 
 
 

@@ -22,4 +22,4 @@ process.crawl(YahooSpider)
 process.start()
 end_time = time.time()
 use_time = end_time - statt_time
-print('爬取结束，睡眠一个周期,共用时%s' %use_time)
+print('crawling end,crawl cost time:%s second' %use_time)

@@ -16,7 +16,7 @@ class XinhuaSpider(scrapy.Spider):
     keywords = ['债券','拆借','美元','黄金','原油']
     url = 'http://so.news.cn/getNews?keyword=%E9%BB%84%E9%87%91&curPage=1&sortField=0&searchFields=1'
     def start_requests(self):
-        print('开始运行 XINHUA...')
+        print('start crawling XINHUA...')
         for keyword in self.keywords:
             keyword_encode = urllib.request.quote(keyword)
             url = 'http://so.news.cn/getNews?keyword='+keyword_encode+'&curPage=1&sortField=0&searchFields=1'
@@ -48,7 +48,7 @@ class XinhuaSpider(scrapy.Spider):
                 yield scrapy.Request(group['url'],callback=self.parse,meta={'s_n':sitename})
                 yield item
             except:
-                print('XINHUA,错误，忽略错误项')
+                print('XINHUA,Homepage Error')
                 pass
         last_date = data[-1]['pubtime'][:10]
         if self._timejudgement(last_date):
@@ -76,4 +76,4 @@ class XinhuaSpider(scrapy.Spider):
             item['file_urls'] = None
             yield item
         except:
-            print('XINHUA，内容解析错误，忽略错误项')
+            print('XINHUA，Content Error')
