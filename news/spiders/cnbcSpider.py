@@ -15,7 +15,7 @@ class CnbcspiderSpider(scrapy.Spider):
         keywords =['dollar','lending rates','bonds','cpooer']
         for keyword in keywords:
             url = ('http://search.cnbc.com/rs/search/view.html?partnerId=2000&keywords='
-                   + keyword + '&sort=date&source=CNBC.com,Today&pubtime=7&pubfreq=d&page=1')
+                   + keyword + '&sort=date&source=CNBC.com,Today&pubtime=1&pubfreq=d&page=1')
             yield scrapy.Request(url,callback=self.next_parse,dont_filter=True,meta={'goal':keyword,'page':1})
 
     def next_parse(self,response):
@@ -32,6 +32,7 @@ class CnbcspiderSpider(scrapy.Spider):
                 item['content'] = result.xpath('./p//text()').extract()[0]
                 item['goal_type'] = response.meta['goal']
                 item['msite'] = 'cnbc'
+                item['img-urls'] = None
                 source = result.css('span.source').extract_first()[8:]
                 yield item
                 yield scrapy.Request(mLink, callback=self.parse, meta={'mLink': mLink,'source':source})

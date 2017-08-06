@@ -39,6 +39,7 @@ class SmmSpider(scrapy.Spider):
                 item['content'] = news['Profile']
                 item['msite'] = 'smm'
                 item['goal_type'] = response.meta['goal']
+                item['img_urls'] = [news['Thumb']]
                 yield item
                 yield scrapy.Request(item['url'],callback=self.parse,meta={'source':news['Source'],'url':item['url']})
             except:

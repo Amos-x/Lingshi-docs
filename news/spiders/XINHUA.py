@@ -41,6 +41,7 @@ class XinhuaSpider(scrapy.Spider):
                 item['url'] = group['url']
                 item['time'] = str_time
                 item['msite'] = 'xinhua'
+                item['img_urls'] = None
                 if group['des']:
                     item['content'] = re.sub(r"[<>/='a-z]",'',group['des']).replace(' ','')
                 item['goal_type'] = response.meta['goal']

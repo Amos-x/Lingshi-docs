@@ -43,6 +43,7 @@ class MiitspiderSpider(scrapy.Spider):
                 item['content'] = news['summaries']
                 item['msite'] = 'miit'
                 item['goal_type'] = response.meta['goal']
+                item['img_urls'] = None
                 yield item
                 yield scrapy.Request(news['url'],callback=self.parse,meta={'url':news['url']})
             except:

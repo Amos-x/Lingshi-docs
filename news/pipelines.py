@@ -59,24 +59,26 @@ class ImageDownloadPipeline(ImagesPipeline):
         return filename
 
     def get_media_requests(self,item,info):
-        if type(item) == NewsContent:
-            if item['img_urls']:
-                for img_url in item['img_urls']:
-                    yield scrapy.Request(img_url,meta={'msite':item['msite']})
+        if item['img_urls']:
+            for img_url in item['img_urls']:
+                yield scrapy.Request(img_url,meta={'msite':item['msite']})
+
 
     def item_completed(self, results, item, info):
         """得到图片地址，赋值给item"""
         try:
             img_paths = [x['path'] for ok, x in results if ok]
+            item['img_paths'] = None
             if type(item) == NewsContent:
-                item['img_paths'] = None
                 if item['content']:
                     if type(item['content']) == list:
                         item['content'] = ''.join(item['content'])
             if img_paths:
+                item['img_urls'] = ','.join(item['img_urls'])
                 item['img_paths'] = ','.join(img_paths)
-                for x in range(len(img_paths)):
-                    item['content'] = re.sub(r'<img (.*?)>','<img src="'+img_paths[x] +'">',item['content'],1)
+                if type(item) == NewsContent:
+                    for x in range(len(img_paths)):
+                        item['content'] = re.sub(r'<img (.*?)>','<img src="'+img_paths[x] +'">',item['content'],1)
         except:
             raise DropItem('ImagePipeline Error')
         return item
@@ -151,16 +153,18 @@ class save_to_mysql(object):
         }
         if type(item) == NewsItem:
             try:
-                sql = 'insert into '+tb_names[item['goal_type']]+'(mTitle,mLink,mTime,mContent,mSite) values(%s,%s,%s,%s,%s)'
-                self.cursor.execute(sql,(item['title'],item['url'],item['time'],item['content'],item['msite']))
+                sql = 'insert into '+tb_names[item['goal_type']]+'(mTitle,mLink,mTime,mContent,mSite,mImg_urls,mImg_paths) values(%s,%s,%s,%s,%s,%s,%s);'
+                self.cursor.execute(sql,(item['title'],item['url'],item['time'],item['content'],item['msite'],item['img_urls'],item['img_paths']))
                 self.db.commit()
             except:
                 pass
+                # print('一级数据库插入错误')
         if type(item) == NewsContent:
             try:
-                sql = "insert into tb_detail(mTitle,mSource,mLink,mContent,mSite,mImage_urls,mImage_paths,mFile_urls,mFile_path) values(%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+                sql = "insert into tb_detail(mTitle,mSource,mLink,mContent,mSite,mImage_urls,mImage_paths,mFile_urls,mFile_path) values(%s,%s,%s,%s,%s,%s,%s,%s,%s);"
                 self.cursor.execute(sql,(item['title'],item['source'],item['url'],item['content'],item['msite'],item['img_urls'],item['img_paths'],item['file_urls'],item['file_paths']))
                 self.db.commit()
             except:
                 pass
+                # print('二级数据库插入错误')
         return item

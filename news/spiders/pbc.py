@@ -60,6 +60,7 @@ class PbcSpider(scrapy.Spider):
                     item['content'] = group.select('p')[0].get_text()
                     item['msite'] = 'pbc'
                     item['goal_type'] = keyword
+                    item['img_urls'] = None
                     yield item
                     yield scrapy.Request(item['url'], callback=self.last_parse)
             except:

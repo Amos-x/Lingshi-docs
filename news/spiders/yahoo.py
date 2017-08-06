@@ -29,7 +29,7 @@ class YahooSpider(scrapy.Spider):
     def next_parse(self, response):
         item = NewsItem()
         try:
-            result_list = response.css('ol.reg.searchCenterMiddle')
+            result_list = response.css('ol.reg.searchCenterMiddle li')
             for group in result_list:
                 time = group.css('span.tri.fc-2nd.ml-10::text').extract_first()
                 if self.time_judgement(time):
@@ -39,6 +39,7 @@ class YahooSpider(scrapy.Spider):
                     item['content'] = group.css('.compText p::text').extract_first()
                     item['msite'] = 'yahoo'
                     item['goal_type'] = response.meta['goal']
+                    item['img_urls'] = group.css('img.s-img::attr(data-src)').extract()
                     yield item
                     yield scrapy.Request(item['url'], callback=self.parse, meta={'url': item['url']})
         except:

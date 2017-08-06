@@ -22,13 +22,16 @@ NEWSPIDER_MODULE = 'news.spiders'
 MYSQL_HOST = 'localhost'
 MYSQL_PORT = 3306
 MYSQL_USERNAME = 'root'
-MYSQL_PASSWORD = 'wyx379833553'
+MYSQL_PASSWORD = '20170727'
 MYSQL_DB = 'crawldb'
 
 LOG_LEVEL = 'INFO'
 
-FILES_STORE = 'F:\\NEWS\\files'
-IMAGES_STORE = 'F:\\NEWS\\images'
+FILES_STORE = '/home/Amos/News_Crawler/files'
+IMAGES_STORE = '/home/Amos/News_Crawler/images'
+
+#FILES_STORE = 'C:\\Users\Amos\PycharmProjects\\News\images'
+#IMAGES_STORE = 'C:\\Users\Amos\PycharmProjects\\News\\files'
 
 DOWNLOAD_TIMEOUT = 30
 
@@ -40,6 +43,8 @@ ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 CONCURRENT_REQUESTS = 32
+
+CONCURRENT_ITEMS = 1
 
 # Configure a delay for requests for the same website (default: 0)
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
@@ -113,7 +118,7 @@ SCHEDULER = "scrapy_redis.scheduler.Scheduler"
 
 DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
 
-REDIS_URL = 'redis://Amos:wyx379833553@localhost:6379'
+REDIS_URL = 'redis://root:wyx379833553@localhost:6379'
 # REDIS_HOST = 'localhost'
 # REDIS_PORT = 6379
 

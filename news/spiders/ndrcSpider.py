@@ -52,6 +52,7 @@ class NdrcspiderSpider(scrapy.Spider):
                     item['time'] = time.replace("- (", "").replace(")", "").strip() # 需要对日期进行修改
                     item['goal_type'] = key  # goal就是所要查找的关键词
                     item['msite'] = 'ndrc'
+                    item['img_urls'] = None
                     yield item
                     yield scrapy.Request(url=item['url'],
                                          callback=self.parse_content,

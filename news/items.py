@@ -14,6 +14,8 @@ class NewsItem(scrapy.Item):
     content = scrapy.Field()
     msite = scrapy.Field()
     goal_type = scrapy.Field()
+    img_urls = scrapy.Field()
+    img_paths = scrapy.Field()
 
 class NewsContent(scrapy.Item):
     title = scrapy.Field()
