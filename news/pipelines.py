@@ -61,7 +61,8 @@ class ImageDownloadPipeline(ImagesPipeline):
     def get_media_requests(self,item,info):
         if item['img_urls']:
             for img_url in item['img_urls']:
-                yield scrapy.Request(img_url,meta={'msite':item['msite']})
+                if 'http' in img_url:
+                    yield scrapy.Request(img_url.strip(),meta={'msite':item['msite']})
 
 
     def item_completed(self, results, item, info):
@@ -74,11 +75,14 @@ class ImageDownloadPipeline(ImagesPipeline):
                     if type(item['content']) == list:
                         item['content'] = ''.join(item['content'])
             if img_paths:
-                item['img_urls'] = ','.join(item['img_urls'])
+                item['img_urls'] = ','.join((item['img_urls'] if type(item['img_urls'])==list else [item['img_urls']]))
                 item['img_paths'] = ','.join(img_paths)
                 if type(item) == NewsContent:
                     for x in range(len(img_paths)):
                         item['content'] = re.sub(r'<img (.*?)>','<img src="'+img_paths[x] +'">',item['content'],1)
+            else:
+                item['img_urls'] = None
+
         except:
             raise DropItem('ImagePipeline Error')
         return item
@@ -156,15 +160,18 @@ class save_to_mysql(object):
                 sql = 'insert into '+tb_names[item['goal_type']]+'(mTitle,mLink,mTime,mContent,mSite,mImg_urls,mImg_paths) values(%s,%s,%s,%s,%s,%s,%s);'
                 self.cursor.execute(sql,(item['title'],item['url'],item['time'],item['content'],item['msite'],item['img_urls'],item['img_paths']))
                 self.db.commit()
-            except:
-                pass
-                # print('一级数据库插入错误')
+            except Exception as e:
+                print('一级表插入错误')
+                print(e)
+                print(item)
+
         if type(item) == NewsContent:
             try:
                 sql = "insert into tb_detail(mTitle,mSource,mLink,mContent,mSite,mImage_urls,mImage_paths,mFile_urls,mFile_path) values(%s,%s,%s,%s,%s,%s,%s,%s,%s);"
                 self.cursor.execute(sql,(item['title'],item['source'],item['url'],item['content'],item['msite'],item['img_urls'],item['img_paths'],item['file_urls'],item['file_paths']))
                 self.db.commit()
-            except:
-                pass
-                # print('二级数据库插入错误')
+            except Exception as e:
+                print('二级数据库插入错误')
+                print(e)
+                print(item['url'])
         return item

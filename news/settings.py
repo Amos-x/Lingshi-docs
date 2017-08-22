@@ -19,16 +19,16 @@ NEWSPIDER_MODULE = 'news.spiders'
 # MONGO_DB = 'NEWS'
 
 # MYSQL 连接信息
-MYSQL_HOST = 'localhost'
-MYSQL_PORT = 3306
+MYSQL_HOST = '119。145.165.118'
+MYSQL_PORT = 8081
 MYSQL_USERNAME = 'root'
 MYSQL_PASSWORD = '20170727'
-MYSQL_DB = 'crawldb'
+MYSQL_DB = 'news-crawler'
 
 LOG_LEVEL = 'INFO'
 
-FILES_STORE = '/home/Amos/News_Crawler/files'
-IMAGES_STORE = '/home/Amos/News_Crawler/images'
+FILES_STORE = 'C:\\Users\Amos\PycharmProjects\images'
+IMAGES_STORE = 'C:\\Users\Amos\PycharmProjects\\files'
 
 #FILES_STORE = 'C:\\Users\Amos\PycharmProjects\\News\images'
 #IMAGES_STORE = 'C:\\Users\Amos\PycharmProjects\\News\\files'
@@ -42,16 +42,16 @@ USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML
 ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-CONCURRENT_REQUESTS = 32
+# CONCURRENT_REQUESTS = 32
 
-CONCURRENT_ITEMS = 1
+# CONCURRENT_ITEMS = 1
 
 # Configure a delay for requests for the same website (default: 0)
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
 #DOWNLOAD_DELAY = 3
 # The download delay setting will honor only one of:
-CONCURRENT_REQUESTS_PER_DOMAIN = 10000
+# CONCURRENT_REQUESTS_PER_DOMAIN = 10000
 #CONCURRENT_REQUESTS_PER_IP = 16
 
 # Disable cookies (enabled by default)
@@ -114,12 +114,12 @@ ITEM_PIPELINES = {
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 
-SCHEDULER = "scrapy_redis.scheduler.Scheduler"
-
-DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
-
-REDIS_URL = 'redis://root:wyx379833553@localhost:6379'
-# REDIS_HOST = 'localhost'
-# REDIS_PORT = 6379
-
-SCHEDULER_PERSIST = True
+# SCHEDULER = "scrapy_redis.scheduler.Scheduler"
+#
+# DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
+#
+# REDIS_URL = 'redis://root:wyx379833553@localhost:6379'
+# # REDIS_HOST = 'localhost'
+# # REDIS_PORT = 6379
+#
+# SCHEDULER_PERSIST = True

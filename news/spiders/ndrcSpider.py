@@ -5,70 +5,67 @@ from scrapy.http import FormRequest
 from scrapy.http import HtmlResponse
 from news.items import NewsContent,NewsItem
 from urllib.parse import urljoin
+import math
 import datetime
 
 
 class NdrcspiderSpider(scrapy.Spider):
     name = 'ndrcSpider'
-    allowed_domains = ['"www.ndrc.gov.cn/#"']
-    searchKey = ['铜', '铝', '铅', '锌', '债券', '拆借', '美元', '黄金', '原油', '矿', 'COPPER', 'mine', 'lending rates', 'bonds']
-
+    searchKey = ['铜', '铝', '铅', '锌', '债券', '拆借', '美元', '黄金', '原油', '矿']
+    fromday = datetime.datetime.now().strftime('%Y.%m.%d')#日期必须匹配%Y.%m.%d，不能为%Y-%m-%d
+    today = datetime.datetime.now().strftime('%Y.%m.%d')#日期必须匹配%Y.%m.%d，不能为%Y-%m-%d
     def start_requests(self):
         print('start crawling ndrc...')
-        today = str(datetime.datetime.today())[:10]
         url='http://www.ndrc.gov.cn/fgwSearch/searchResult.jsp'
         for key in self.searchKey:
             yield FormRequest(url=url,
-                              formdata={'sword': key, 'type': '1', 'from': today,'to': today, 'order': '-DOCRELTIME', 'page': '1'},
+                              formdata={'sword': key, 'type': '1', 'from': self.fromday,'to': self.today,
+                                        'order': '-DOCRELTIME','pageSize':'10'},
                               dont_filter=True,
-                              meta={'key': key,'page':1,'date': today},
+                              meta={'key': key,'page':1},
                               callback=self.parse_list)
-
-
-    def time_judgement(self,str_time):
-        today = str(datetime.datetime.today())[:10]
-        if str_time == today:
-            return True
 
     #爬取一级新闻列表内容
     def parse_list(self, response):
         page = response.meta['page']  #当前搜索结果的所显示的页面数
         key=response.meta['key']  #当前页面的关键字
-        today_date = response.meta['date']  #获取当天日期
         result_list = response.css('.list_04')
         if result_list:
+            allPages=math.ceil(int(response.xpath('//div[@class="sm1"]/font[@class="red2"]/text()').extract()[0])/10)
+            print(self.fromday)
+            print(self.today)
+            print(response.xpath('//div[@class="sm1"]/font[@class="red2"]/text()').extract()[0])
             for result in result_list:
                 try:
                     time = response.css('font.dateShow::text').extract_first()[3:-1]
-                    if not self.time_judgement(time):
-                        break
                     title = result.xpath('string(./dt/a)').extract()[0]
                     content = result.xpath('string(./dd[@class="txt"]/p[position() = 1]/a)').extract()[0]
                     link = result.xpath('./dd[@class="txt"]/p[position() = 2]/a/text()').extract()[0]
                     item = NewsItem()
-                    item['title'] = self.replaceCharEntity(title[4:].strip()).replace(" ","")
+                    item['title'] = self.replaceCharEntity(title[5:].strip()).replace(" ","")
                     item['content'] = self.replaceCharEntity(content.strip()).replace(" ","")
                     item['url'] = link.strip()
                     item['time'] = time.replace("- (", "").replace(")", "").strip() # 需要对日期进行修改
                     item['goal_type'] = key  # goal就是所要查找的关键词
                     item['msite'] = 'ndrc'
                     item['img_urls'] = None
-                    yield item
                     yield scrapy.Request(url=item['url'],
                                          callback=self.parse_content,
-                                         meta={'title':item['title']})
+                                         meta={'Newsitem':item})
                 except:
                     print('NDRC,Homepage Error')
+
             # 进行换页,回调
-            lat_time = result_list[-1].css('font.dateShow').extract_first()
-            if self.time_judgement(lat_time):
+            if page < allPages:
                 yield FormRequest(url='http://www.ndrc.gov.cn/fgwSearch/searchResult.jsp',
-                          formdata={'sword': key, 'type': '1', 'from': today_date ,'to': today_date, 'order': '-DOCRELTIME', 'page': str(page+1)},
-                          dont_filter=True, callback=self.parse_list, meta={'key': key, 'page': page+1,'date':today_date})
+                          formdata={'sword': key, 'searchword':key,'preSWord':key,'type': '1', 'from': self.fromday ,
+                                    'to': self.today,'wordFlag':'true','order': '-DOCRELTIME', 'page': str(page+1),'pageSize':'10'},
+                          dont_filter=True, callback=self.parse_list, meta={'key': key, 'page': page+1})
     #抓取新闻具体内容
     def parse_content(self, response):
         try:
-            mTitle = response.meta['title']
+            newsitem = response.meta['Newsitem']
+            mTitle = newsitem['title']
             mSource = '国家发展和改革委员会'
             response = HtmlResponse(response.url, encoding='utf-8', body=response.body)
             if len(response.xpath('//div[@class="txt_title1 tleft"]//text()').extract()):
@@ -88,9 +85,12 @@ class NdrcspiderSpider(scrapy.Spider):
                 item['source'] = mSource
                 item['content'] = content
                 item['img_urls'] = [urljoin(response.url,url) for url in response.css('#zoom img::attr(src)').extract()]
-                item['file_urls'] = None
+                item['file_urls'] = []
                 item['url'] = response.url
+                item['msite']='ndrc'
+                yield newsitem
                 yield item
+
         except:
             print('NDRC，Content Error')
 
@@ -119,11 +119,11 @@ class NdrcspiderSpider(scrapy.Spider):
     def dispose(self,content):  # content是爬去的正文内容,是字符串类型
         # 正则表达式
         # re.compile() 可以把正则表达式编译成一个正则表达式对象.
-        delete_tag_begin = re.compile('<(div|DIV|a|FONT)[^>]*>')  # 去除标签开头
-        delete_tag_end = re.compile('<(\/div|\/DIV|\/a)>')  # 去除标签结尾
+        delete_tag_begin = re.compile('<\s*(div|DIV|a|span)(\s*)[^>]*>')  # 去除标签开头
+        delete_tag_end = re.compile('<\s*(\/div|\/DIV|\/a|\/span)\s*>')  # 去除标签结尾
         # 去除标签内的属性
         clear_tag = re.compile(
-            '<(p|font|h1|h2|h3|h4|strong|dd|dt|dl|form|li|ul|hr|span|tr|td|tbody|table)(\s+)([^>])*>')
+            '<\s*(p|font|FONT|h1|h2|h3|h4|h5|h6|strong|dd|dt|dl|form|li|ul|hr|tr|tt|td|th|thead|tbody|table|tfoot|b|br|i|u|time)(\s+)([^>])*>')
         # 去除<style>标签和内容
         delete_detail = re.compile('<\s*(style|script)([^>])*>([\s\S]*)<\s*/(style|script)([^>])*>')
         # 去除注释里面的内容

@@ -20,7 +20,7 @@ class XinhuaSpider(scrapy.Spider):
         for keyword in self.keywords:
             keyword_encode = urllib.request.quote(keyword)
             url = 'http://so.news.cn/getNews?keyword='+keyword_encode+'&curPage=1&sortField=0&searchFields=1'
-            yield scrapy.Request(url,callback=self.next_parse,dont_filter=True,meta={'goal':keyword,'page':1})
+            yield scrapy.Request(url,callback=self.next_parse,dont_filter=True)
 
 
     def _timejudgement(self,str_time):
@@ -30,13 +30,15 @@ class XinhuaSpider(scrapy.Spider):
             return True
 
     def next_parse(self,response):
-        data = json.loads(response.text)['content']['results']
-        item = NewsItem()
+        result = json.loads(response.text)['content']
+        data = result['results']
+        keyword = result['keyword']
         for group in data:
             try:
                 str_time = group['pubtime'][:10]
                 if not self._timejudgement(str_time):
                     break
+                item = NewsItem()
                 item['title'] = re.sub(r"[<>/='a-z]", '', group['title']).replace(' ', '')
                 item['url'] = group['url']
                 item['time'] = str_time
@@ -44,19 +46,20 @@ class XinhuaSpider(scrapy.Spider):
                 item['img_urls'] = None
                 if group['des']:
                     item['content'] = re.sub(r"[<>/='a-z]",'',group['des']).replace(' ','')
-                item['goal_type'] = response.meta['goal']
+                else:
+                    item['content'] = None
+                item['goal_type'] = keyword
                 sitename = group['sitename']
-                yield scrapy.Request(group['url'],callback=self.parse,meta={'s_n':sitename})
-                yield item
+                yield scrapy.Request(group['url'],callback=self.parse,meta={'s_n':sitename,'newsitem':item})
             except:
                 print('XINHUA,Homepage Error')
                 pass
         last_date = data[-1]['pubtime'][:10]
         if self._timejudgement(last_date):
-            page_num = response.meta['page'] + 1
+            page_num = int(result['curPage']) + 1
             page = 'curPage'+str(page_num)
             url = re.sub('curPage=\d',page,response.url)
-            yield scrapy.Request(url,callback=self.next_parse,meta={'keyword':response.meta['goal'],'page':page_num})
+            yield scrapy.Request(url,callback=self.next_parse,meta={'page':page_num})
 
     def parse(self, response):
         try:
@@ -75,6 +78,8 @@ class XinhuaSpider(scrapy.Spider):
             else:
                 item['img_urls'] = None
             item['file_urls'] = None
+            newsitem = response.meta['newsitem']
+            yield newsitem
             yield item
         except:
             print('XINHUA，Content Error')

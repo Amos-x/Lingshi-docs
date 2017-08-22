@@ -27,21 +27,20 @@ class SmmSpider(scrapy.Spider):
             return True
 
     def next_parse(self,response):
-        item = NewsItem()
         news_List = json.loads(response.text)['data']
         for news in news_List:
             try:
                 if not self._time_judgment(news['Date']):
                     break
+                item = NewsItem()
                 item['title'] = news['Title']
                 item['url'] = self.serach_urlheaders + news['ID']
                 item['time'] = news['Date']
-                item['content'] = news['Profile']
+                item['content'] = (news['Profile'] if news['Profile'] else None)
                 item['msite'] = 'smm'
                 item['goal_type'] = response.meta['goal']
                 item['img_urls'] = [news['Thumb']]
-                yield item
-                yield scrapy.Request(item['url'],callback=self.parse,meta={'source':news['Source'],'url':item['url']})
+                yield scrapy.Request(item['url'],callback=self.parse,meta={'source':news['Source'],'url':item['url'],'newsitem':item})
             except:
                 print('SMM，Homepage Error')
 
@@ -51,10 +50,12 @@ class SmmSpider(scrapy.Spider):
             item['title'] = response.css('div.news-title h1::text').extract_first()
             item['url'] = response.meta['url']
             item['source'] = response.meta['source']
-            item['content'] = response.xpath('//*[@id="content"]/div[3]/article/div/p|//*[@id="content"]/div[3]/article/div/table|//*[@id="content"]/div[3]/article/div/hr').extract()
-            for x in range(len(item['content'])-1):
-                if item['content'][x] == '<hr>':
-                    item['content'] = item['content'][:x]
+            content = response.xpath('//*[@id="content"]/div[3]/article/div/p|//*[@id="content"]/div[3]/article/div/table|//*[@id="content"]/div[3]/article/div/hr').extract()
+            for x in range(len(content)):
+                if content[x] == '<hr>':
+                    content = content[:x]
+                    break
+            item['content'] = content
             item['msite'] = 'smm'
             img_urls = response.css('article p img::attr(src)').extract()
             if img_urls:
@@ -62,6 +63,8 @@ class SmmSpider(scrapy.Spider):
             else:
                 item['img_urls'] = None
             item['file_urls'] = None
+            newsitem = response.meta['newsitem']
+            yield newsitem
             yield item
-        except:
-            print('SMM，Content Error')
+        except Exception as e:
+            print(e)

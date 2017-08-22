@@ -12,7 +12,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 class PbcSpider(scrapy.Spider):
     name = "pbc"
     # allowed_domains = [".pbc.gov.cn"]
-    keywords = ['铜', '铝', '铅', '锌', '债券', '拆借', '美元', '黄金', '原油', '矿', 'COPPER', 'mine', 'lending rates', 'bonds']
+    keywords = ['铜', '铝', '铅', '锌', '债券', '拆借', '美元', '黄金', '原油', '矿', 'copper', 'mine', 'lending rates', 'bonds']
 
     def __init__(self):
         scrapy.Spider.__init__(self)
@@ -48,12 +48,12 @@ class PbcSpider(scrapy.Spider):
                 self.button.click()
                 html = self.browser.page_source
                 soup = BeautifulSoup(html, 'lxml')
-                item = NewsItem()
                 cen_list = soup.select('div.cen_list ul')
                 for group in cen_list:
                     str_time = group.select('li')[0].get_text().strip()[-10:]
                     if not self._time_judgment(str_time):
                         break
+                    item = NewsItem()
                     item['title'] = group.select('h3 a')[0].get_text()
                     item['url'] = group.select('h3 a')[0].get('href')
                     item['time'] = str_time
@@ -61,8 +61,7 @@ class PbcSpider(scrapy.Spider):
                     item['msite'] = 'pbc'
                     item['goal_type'] = keyword
                     item['img_urls'] = None
-                    yield item
-                    yield scrapy.Request(item['url'], callback=self.last_parse)
+                    yield scrapy.Request(item['url'], callback=self.last_parse,meta={'newsitem':item})
             except:
                 print('PBC,Homepage Error')
 
@@ -98,12 +97,8 @@ class PbcSpider(scrapy.Spider):
                             item2['file_urls'] = ['/'.join(response.url.split('/')[:3]) + x.get('href') for x in file if x.get('href')]
                         else:
                             item2['file_urls'] = None
-                        # video = soup.select('#zoom p embed')
-                        # 视频信息抓取
-                        # if video:
-                        #     item2['video'] = ['/'.join(response.url.split('/')[:3]) + v.get('flashvars')[2:] for v in video if v.get('flashvars')]
-                        # else:
-                        #     item2['video'] = None
+                        newsitem = response.meta['newsitem']
+                        yield newsitem
                         yield item2
         except:
             print('PBC,Content Error')

@@ -27,12 +27,12 @@ class YahooSpider(scrapy.Spider):
 
     # 爬取新闻列表
     def next_parse(self, response):
-        item = NewsItem()
         try:
             result_list = response.css('ol.reg.searchCenterMiddle li')
             for group in result_list:
                 time = group.css('span.tri.fc-2nd.ml-10::text').extract_first()
                 if self.time_judgement(time):
+                    item = NewsItem()
                     item['title'] = group.css('.title a::text').extract_first()
                     item['url'] = group.css('.title a::attr(href)').extract_first()
                     item['time'] = str(datetime.datetime.today())[:10]
@@ -40,8 +40,8 @@ class YahooSpider(scrapy.Spider):
                     item['msite'] = 'yahoo'
                     item['goal_type'] = response.meta['goal']
                     item['img_urls'] = group.css('img.s-img::attr(data-src)').extract()
-                    yield item
-                    yield scrapy.Request(item['url'], callback=self.parse, meta={'url': item['url']})
+                    if 'yahoo.com/news' in item['url']:
+                        yield scrapy.Request(item['url'], callback=self.parse, meta={'url': item['url'],'newsitem':item})
         except:
             print('YAHOO，Homepage Error')
     # 爬取新闻内容
@@ -71,6 +71,8 @@ class YahooSpider(scrapy.Spider):
             else:
                 item['img_urls'] = None
             item['file_urls'] = None
+            newsitem = response.meta['newsitem']
+            yield newsitem
             yield item
         except:
             print('YAHOO,Content Error')
