@@ -39,7 +39,7 @@ class MiitspiderSpider(scrapy.Spider):
                     break
                 item['title'] = news['name']
                 item['url'] = news['url']
-                item['time'] = news['showTime']
+                item['time'] = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
                 item['content'] = news['summaries']
                 item['msite'] = 'miit'
                 item['goal_type'] = response.meta['goal']

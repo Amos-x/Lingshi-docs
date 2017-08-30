@@ -35,7 +35,7 @@ class YahooSpider(scrapy.Spider):
                     item = NewsItem()
                     item['title'] = group.css('.title a::text').extract_first()
                     item['url'] = group.css('.title a::attr(href)').extract_first()
-                    item['time'] = str(datetime.datetime.today())[:10]
+                    item['time'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     item['content'] = group.css('.compText p::text').extract_first()
                     item['msite'] = 'yahoo'
                     item['goal_type'] = response.meta['goal']

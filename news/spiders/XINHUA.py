@@ -41,7 +41,7 @@ class XinhuaSpider(scrapy.Spider):
                 item = NewsItem()
                 item['title'] = re.sub(r"[<>/='a-z]", '', group['title']).replace(' ', '')
                 item['url'] = group['url']
-                item['time'] = str_time
+                item['time'] = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
                 item['msite'] = 'xinhua'
                 item['img_urls'] = None
                 if group['des']:

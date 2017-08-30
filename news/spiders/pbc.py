@@ -56,7 +56,7 @@ class PbcSpider(scrapy.Spider):
                     item = NewsItem()
                     item['title'] = group.select('h3 a')[0].get_text()
                     item['url'] = group.select('h3 a')[0].get('href')
-                    item['time'] = str_time
+                    item['time'] = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
                     item['content'] = group.select('p')[0].get_text()
                     item['msite'] = 'pbc'
                     item['goal_type'] = keyword

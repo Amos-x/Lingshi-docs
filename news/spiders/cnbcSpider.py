@@ -27,7 +27,7 @@ class CnbcspiderSpider(scrapy.Spider):
                     continue
                 item['url'] = mLink
                 item['title'] = result.xpath('./h3//text()').extract()[0]
-                item['time'] = datetime.datetime.now().strftime('%Y-%m-%d')
+                item['time'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 item['content'] = result.xpath('./p//text()').extract()[0]
                 item['goal_type'] = response.meta['goal']
                 item['msite'] = 'cnbc'
@@ -52,7 +52,7 @@ class CnbcspiderSpider(scrapy.Spider):
             item['source'] = response.meta['source']
             item['img_urls'] = response.xpath('//div[@id="article_body"]//img/@src').extract()
             item['msite'] = 'cnbc'
-            item['file_urls'] = []
+            item['file_urls'] = None
             # 获取表格数据
             tableList = response.xpath('//div[@id="article_body"]//table')
             if len(tableList) > 0:  #判断是否需要表格

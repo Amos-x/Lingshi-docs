@@ -12,8 +12,8 @@ import datetime
 class NdrcspiderSpider(scrapy.Spider):
     name = 'ndrcSpider'
     searchKey = ['铜', '铝', '铅', '锌', '债券', '拆借', '美元', '黄金', '原油', '矿']
-    fromday = datetime.datetime.now().strftime('%Y.%m.%d')#日期必须匹配%Y.%m.%d，不能为%Y-%m-%d
-    today = datetime.datetime.now().strftime('%Y.%m.%d')#日期必须匹配%Y.%m.%d，不能为%Y-%m-%d
+    fromday = datetime.datetime.now().strftime('%Y.%m.%d')  #日期必须匹配%Y.%m.%d，不能为%Y-%m-%d
+    today = datetime.datetime.now().strftime('%Y.%m.%d')    #日期必须匹配%Y.%m.%d，不能为%Y-%m-%d
     def start_requests(self):
         print('start crawling ndrc...')
         url='http://www.ndrc.gov.cn/fgwSearch/searchResult.jsp'
@@ -27,8 +27,8 @@ class NdrcspiderSpider(scrapy.Spider):
 
     #爬取一级新闻列表内容
     def parse_list(self, response):
-        page = response.meta['page']  #当前搜索结果的所显示的页面数
-        key=response.meta['key']  #当前页面的关键字
+        page = response.meta['page']    #当前搜索结果的所显示的页面数
+        key=response.meta['key']    #当前页面的关键字
         result_list = response.css('.list_04')
         if result_list:
             allPages=math.ceil(int(response.xpath('//div[@class="sm1"]/font[@class="red2"]/text()').extract()[0])/10)

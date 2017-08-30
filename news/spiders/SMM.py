@@ -35,7 +35,7 @@ class SmmSpider(scrapy.Spider):
                 item = NewsItem()
                 item['title'] = news['Title']
                 item['url'] = self.serach_urlheaders + news['ID']
-                item['time'] = news['Date']
+                item['time'] = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
                 item['content'] = (news['Profile'] if news['Profile'] else None)
                 item['msite'] = 'smm'
                 item['goal_type'] = response.meta['goal']

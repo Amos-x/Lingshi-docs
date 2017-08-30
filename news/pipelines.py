@@ -173,5 +173,5 @@ class save_to_mysql(object):
             except Exception as e:
                 print('二级数据库插入错误')
                 print(e)
-                print(item['url'])
+                print(item)
         return item
