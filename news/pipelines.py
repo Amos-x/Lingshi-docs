@@ -68,7 +68,7 @@ class ImageDownloadPipeline(ImagesPipeline):
     def item_completed(self, results, item, info):
         """得到图片地址，赋值给item"""
         try:
-            img_paths = [x['path'] for ok, x in results if ok]
+            img_paths = ['http://eip.hkmtl.com/images/'+ x['path'] for ok, x in results if ok]
             item['img_paths'] = None
             if type(item) == NewsContent:
                 if item['content']:
