@@ -3,7 +3,7 @@ import scrapy
 import re
 from scrapy.http import FormRequest
 from scrapy.http import HtmlResponse
-from news.items import NewsContent,NewsItem
+from news.items import AllItem
 from urllib.parse import urljoin
 import math
 import datetime
@@ -41,7 +41,7 @@ class NdrcspiderSpider(scrapy.Spider):
                     title = result.xpath('string(./dt/a)').extract()[0]
                     content = result.xpath('string(./dd[@class="txt"]/p[position() = 1]/a)').extract()[0]
                     link = result.xpath('./dd[@class="txt"]/p[position() = 2]/a/text()').extract()[0]
-                    item = NewsItem()
+                    item = AllItem()
                     item['title'] = self.replaceCharEntity(title[5:].strip()).replace(" ","")
                     item['content'] = self.replaceCharEntity(content.strip()).replace(" ","")
                     item['url'] = link.strip()
@@ -80,7 +80,7 @@ class NdrcspiderSpider(scrapy.Spider):
             if article:
                 article = article[0]
                 content = self.dispose(article).strip()
-                item = NewsContent()
+                item = AllItem()
                 item['title'] = mTitle
                 item['source'] = mSource
                 item['content'] = content

@@ -7,23 +7,19 @@
 
 import scrapy
 
-class NewsItem(scrapy.Item):
-    title = scrapy.Field()
-    url = scrapy.Field()
-    time = scrapy.Field()
-    content = scrapy.Field()
-    msite = scrapy.Field()
-    goal_type = scrapy.Field()
-    img_urls = scrapy.Field()
-    img_paths = scrapy.Field()
+class AllItem(scrapy.Item):
+    title = scrapy.Field()                          # 标题
+    url = scrapy.Field()                            # 网址
+    time = scrapy.Field()                           # 时间
+    msite = scrapy.Field()                          # 网站名
+    source = scrapy.Field()                         # 来源
+    classify = scrapy.Field()                       # 分类
+    display = scrapy.Field()                        # 是否展示
+    abstract = scrapy.Field()                       # 摘要（150字纯文本）
+    content = scrapy.Field()                        # 内容
+    home_img_url = scrapy.Field()                   # 列表图片原网址
+    home_img_path = scrapy.Field()                  # 列表图片保存地址
+    content_img_urls = scrapy.Field()               # 内容图片原网址
+    content_img_paths = scrapy.Field()              # 内容图片保存地址
 
-class NewsContent(scrapy.Item):
-    title = scrapy.Field()
-    source = scrapy.Field()
-    url = scrapy.Field()
-    content = scrapy.Field()
-    msite = scrapy.Field()
-    img_urls = scrapy.Field()
-    img_paths = scrapy.Field()
-    file_urls = scrapy.Field()
-    file_paths = scrapy.Field()
+

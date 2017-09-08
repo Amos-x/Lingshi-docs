@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
-from news.items import NewsItem,NewsContent
+from news.items import AllItem
 import time
 import urllib.request
 import json
@@ -8,9 +8,11 @@ import re
 
 class SmmSpider(scrapy.Spider):
     name = 'SMM'
-    allowed_domains = ['www.smm.cn','news.smm.cn']
     start_urls = ['http://www.smm.cn/']
     serach_urlheaders = 'https://news.smm.cn/news/'
+    custom_settings = {'ITEM_PIPELINES': {
+   'news.pipelines.ImageDownloadPipeline':1,
+   'news.pipelines.save_to_mysql': 300,}}
 
     def start_requests(self):
         keywords =['铜','铝','铅','锌']
@@ -32,39 +34,33 @@ class SmmSpider(scrapy.Spider):
             try:
                 if not self._time_judgment(news['Date']):
                     break
-                item = NewsItem()
+                item = AllItem()
                 item['title'] = news['Title']
                 item['url'] = self.serach_urlheaders + news['ID']
                 item['time'] = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
-                item['content'] = (news['Profile'] if news['Profile'] else None)
                 item['msite'] = 'smm'
-                item['goal_type'] = response.meta['goal']
-                item['img_urls'] = [news['Thumb']]
-                yield scrapy.Request(item['url'],callback=self.parse,meta={'source':news['Source'],'url':item['url'],'newsitem':item})
-            except:
+                item['source'] = (news['Source'] if news['Source'] else '上海有色网')
+                item['classify'] = response.meta['goal']
+                item['display'] = '1'
+                item['abstract'] = (news['Profile'] if news['Profile'] else None)
+                item['home_img_url'] = (news['Thumb'] if news['Thumb'] else None)
+                yield scrapy.Request(item['url'],callback=self.parse,meta={'item':item})
+            except Exception as e:
+                print(e)
                 print('SMM，Homepage Error')
 
     def parse(self, response):
         try:
-            item = NewsContent()
-            item['title'] = response.css('div.news-title h1::text').extract_first()
-            item['url'] = response.meta['url']
-            item['source'] = response.meta['source']
+            item = response.meta['item']
             content = response.xpath('//*[@id="content"]/div[3]/article/div/p|//*[@id="content"]/div[3]/article/div/table|//*[@id="content"]/div[3]/article/div/hr').extract()
             for x in range(len(content)):
                 if content[x] == '<hr>':
                     content = content[:x]
                     break
-            item['content'] = content
-            item['msite'] = 'smm'
+            item['content'] = ''.join(content)
             img_urls = response.css('article p img::attr(src)').extract()
-            if img_urls:
-                item['img_urls'] = img_urls
-            else:
-                item['img_urls'] = None
-            item['file_urls'] = None
-            newsitem = response.meta['newsitem']
-            yield newsitem
+            item['content_img_urls'] = (img_urls if img_urls else None)
             yield item
         except Exception as e:
             print(e)
+            print('内容解析错误')

@@ -4,46 +4,14 @@
 #
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
-import pymongo
 import scrapy
 from scrapy.pipelines.images import ImagesPipeline
-from scrapy.pipelines.files import FilesPipeline
-from news.items import NewsContent,NewsItem
 import re
 import hashlib
 from scrapy.exceptions import DropItem
 import datetime
 import pymysql
 
-
-class save_to_mongo(object):
-    def __init__(self,mongo_uri,mongo_db):
-        self.mongo_uri = mongo_uri
-        self.mongo_db = mongo_db
-
-    @classmethod
-    def from_crawler(cls,crawler):
-        return cls(
-            mongo_uri=crawler.settings.get('MONGO_URI'),
-            mongo_db = crawler.settings.get('MONGO_DB')
-        )
-
-    def open_spider(self,spider):
-        self.client = pymongo.MongoClient(self.mongo_uri)
-        self.db = self.client[self.mongo_db]
-
-    def close_spider(self,spider):
-        self.client.close()
-
-    def process_item(self,item,spider):
-        try:
-            if type(item) == NewsItem:
-                self.db['first'].update({'url': item['url']}, {'$set': dict(item)}, True)
-            if type(item) == NewsContent:
-                self.db['second'].insert(dict(item))
-            return item
-        except:
-            print('insert datadb ERROR ')
 
 class ImageDownloadPipeline(ImagesPipeline):
 
@@ -59,62 +27,39 @@ class ImageDownloadPipeline(ImagesPipeline):
         return filename
 
     def get_media_requests(self,item,info):
-        if item['img_urls']:
-            for img_url in item['img_urls']:
-                if 'http' in img_url:
-                    yield scrapy.Request(img_url.strip(),meta={'msite':item['msite']})
-
+        if item['home_img_url']:
+            yield scrapy.Request(item['home_img_url'].strip(),meta={'msite':item['msite']})
+        if item['content_img_urls']:
+            for img_url in item['content_img_urls']:
+                yield scrapy.Request(img_url.strip(),meta={'msite':item['msite']})
 
     def item_completed(self, results, item, info):
-        """得到图片地址，赋值给item"""
+        """
+        得到图片地址，将地址赋值给对应item，并将内容中的图片链接替换成图片地址
+        要求内容的图片链接需为完整链接，否则则需要增加一个item字段用来再内容中匹配原链接进行替换。
+        """
         try:
             img_paths = ['http://eip.hkmtl.com/images/'+ x['path'] for ok, x in results if ok]
-            item['img_paths'] = None
-            if type(item) == NewsContent:
-                if item['content']:
-                    if type(item['content']) == list:
-                        item['content'] = ''.join(item['content'])
+            item['home_img_path'] = None
+            item['content_img_paths'] = None
             if img_paths:
-                item['img_urls'] = ','.join((item['img_urls'] if type(item['img_urls'])==list else [item['img_urls']]))
-                item['img_paths'] = ','.join(img_paths)
-                if type(item) == NewsContent:
-                    for x in range(len(img_paths)):
-                        item['content'] = re.sub(r'<img (.*?)>','<img src="'+img_paths[x] +'">',item['content'],1)
-            else:
-                item['img_urls'] = None
-
-        except:
-            raise DropItem('ImagePipeline Error')
-        return item
-
-class FileDownloadPipeline(FilesPipeline):
-
-    def file_path(self, request, response=None, info=None):
-        """自定义文件名和存储结构"""
-        sha = hashlib.sha1(request.url.encode('utf-8'))
-        encrypts = sha.hexdigest()
-        today = datetime.datetime.today()
-        year = str(today.year)
-        filename = u'{0}/{1}/{2}/.png'.format(request.meta['msite'], year, encrypts)
-        return filename
-
-    def get_media_requests(self,item,info):
-        if type(item) == NewsContent:
-            if item['file_urls']:
-                for file_url in item['file_urls']:
-                    yield scrapy.Request(file_url,meta={'msite':item['msite']})
-
-    def item_completed(self, results, item, info):
-        """得到图片地址，赋值给item"""
-        try:
-            file_paths = [x['path'] for ok, x in results if ok]
-            if type(item) == NewsContent:
-                if file_paths:
-                    item['file_paths'] = ','.join(file_paths)
+                item['content'] = re.sub(r'<img .*?>', '<img src="replace">', item['content'])
+                if item['home_img_url']:
+                    item['home_img_path'] = img_paths[0]
+                    if item['content_img_urls']:
+                        item['content_img_paths'] = ','.join(img_paths[1:])
+                        for img_path in img_paths[1:]:
+                            item['content'] = re.sub(r'<img src="replace">','<img src="'+img_path+'">',item['content'],1)
                 else:
-                    item['file_paths'] = None
-        except:
-            raise DropItem('FilePipeline Error')
+                    item['home_img_path'] = None
+                    if item['content_img_urls']:
+                        item['content_img_paths'] = ','.join(img_paths)
+                        for img_path in img_paths:
+                            item['content'] = re.sub(r'<img src="replace">', '<img src="' + img_path + '">',item['content'], 1)
+        except Exception as e:
+            print('图片管道错误')
+            print(e)
+            raise DropItem('ImagePipeline Error')
         return item
 
 class save_to_mysql(object):
@@ -143,35 +88,15 @@ class save_to_mysql(object):
         self.db.close()
 
     def process_item(self,item,spider):
-        tb_names = {
-            '铝': 'tb_al_cn','aluminum': 'tb_al_en',
-            '债券': 'tb_bonds_cn','bonds': 'tb_bonds_en',
-            '铜': 'tb_cu_cn','copper': 'tb_cu_en',
-            '美元': 'tb_dollar_cn','dollar': 'tb_dollar_en',
-            '黄金': 'tb_gold_cn','gold': 'tb_gold_en',
-            '拆借': 'tb_lending','lending rates': 'tb_lending_rates',
-            '矿': 'tb_mine_cn','mine': 'tb_mine_en',
-            '原油': 'tb_oil_cn','crude oil': 'tb_oil_en',
-            '铅': 'tb_pb_cn','plumbun': 'tb_pb_en',
-            '锌': 'tb_zn_cn','zinc': 'tb_zn_en',
-        }
-        if type(item) == NewsItem:
-            try:
-                sql = 'insert into '+tb_names[item['goal_type']]+'(mTitle,mLink,mTime,mContent,mSite,mImg_urls,mImg_paths) values(%s,%s,%s,%s,%s,%s,%s);'
-                self.cursor.execute(sql,(item['title'],item['url'],item['time'],item['content'],item['msite'],item['img_urls'],item['img_paths']))
-                self.db.commit()
-            except Exception as e:
-                print('一级表插入错误')
-                print(e)
-                print(item)
-
-        if type(item) == NewsContent:
-            try:
-                sql = "insert into tb_detail(mTitle,mSource,mLink,mContent,mSite,mImage_urls,mImage_paths,mFile_urls,mFile_path) values(%s,%s,%s,%s,%s,%s,%s,%s,%s);"
-                self.cursor.execute(sql,(item['title'],item['source'],item['url'],item['content'],item['msite'],item['img_urls'],item['img_paths'],item['file_urls'],item['file_paths']))
-                self.db.commit()
-            except Exception as e:
-                print('二级数据库插入错误')
-                print(e)
-                print(item)
+        try:
+            sql = 'insert into news_item values(NULL,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'
+            self.cursor.execute(sql,(item['title'],item['url'],item['time'],item['msite'],item['source'],
+                                     item['classify'],item['display'],item['abstract'],item['content'],
+                                     item['home_img_url'],item['home_img_path'],item['content_img_urls'],
+                                     item['content_img_paths'],item['file_urls'],item['file_paths']))
+            self.db.commit()
+        except Exception as e:
+            print(item)
+            print(e)
+            print('插入数据库错误')
         return item

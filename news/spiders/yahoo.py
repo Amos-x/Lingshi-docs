@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import scrapy
 import re
-from news.items import NewsItem,NewsContent
+from news.items import AllItem
 import datetime
 
 class YahooSpider(scrapy.Spider):
@@ -32,7 +32,7 @@ class YahooSpider(scrapy.Spider):
             for group in result_list:
                 time = group.css('span.tri.fc-2nd.ml-10::text').extract_first()
                 if self.time_judgement(time):
-                    item = NewsItem()
+                    item = AllItem()
                     item['title'] = group.css('.title a::text').extract_first()
                     item['url'] = group.css('.title a::attr(href)').extract_first()
                     item['time'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -59,7 +59,7 @@ class YahooSpider(scrapy.Spider):
                     if len(string) == 0:
                         continue
                     content = content + " <p> " + string[-1] + " </p>"
-            item = NewsContent()
+            item = AllItem()
             item['title'] = response.xpath('.//div/header[@class="canvas-header"]/h1/text()').extract_first()
             item['url'] = response.url
             item['source'] = response.xpath('.//span[@class="provider-link"]/a/text()').extract_first()

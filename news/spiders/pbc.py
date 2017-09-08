@@ -6,7 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import time
-from news.items import NewsItem,NewsContent
+from news.items import AllItem
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 class PbcSpider(scrapy.Spider):
@@ -53,7 +53,7 @@ class PbcSpider(scrapy.Spider):
                     str_time = group.select('li')[0].get_text().strip()[-10:]
                     if not self._time_judgment(str_time):
                         break
-                    item = NewsItem()
+                    item = AllItem()
                     item['title'] = group.select('h3 a')[0].get_text()
                     item['url'] = group.select('h3 a')[0].get('href')
                     item['time'] = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
@@ -67,7 +67,7 @@ class PbcSpider(scrapy.Spider):
 
     def last_parse(self, response):
         try:
-            item2 = NewsContent()
+            item2 = AllItem()
             if 'html' in response.url:
                 self.browser.get(response.url)
                 html2 = self.browser.page_source

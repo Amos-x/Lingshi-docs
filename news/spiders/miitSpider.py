@@ -3,7 +3,7 @@ import re
 import scrapy
 import time
 from scrapy import FormRequest
-from news.items import NewsItem, NewsContent
+from news.items import AllItem
 import json
 from urllib.request import urljoin
 
@@ -30,7 +30,7 @@ class MiitspiderSpider(scrapy.Spider):
             return True
 
     def next_parse(self, response):
-        item = NewsItem()
+        item = AllItem()
         new_list = json.loads(response.text)['array']
         page_now = int(json.loads(response.text)['pageNow'])
         for news in new_list:
@@ -56,7 +56,7 @@ class MiitspiderSpider(scrapy.Spider):
                               
     def parse(self, response):
         try:
-            item = NewsContent()
+            item = AllItem()
             content = response.text
             title = response.xpath('/html/head/title/text()').extract()[0]
             pattern = re.compile(

@@ -2,7 +2,7 @@
 import scrapy
 import urllib.request
 import json
-from news.items import NewsContent,NewsItem
+from news.items import AllItem
 import time
 import re
 from bs4 import BeautifulSoup
@@ -38,7 +38,7 @@ class XinhuaSpider(scrapy.Spider):
                 str_time = group['pubtime'][:10]
                 if not self._timejudgement(str_time):
                     break
-                item = NewsItem()
+                item = AllItem()
                 item['title'] = re.sub(r"[<>/='a-z]", '', group['title']).replace(' ', '')
                 item['url'] = group['url']
                 item['time'] = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
@@ -63,7 +63,7 @@ class XinhuaSpider(scrapy.Spider):
 
     def parse(self, response):
         try:
-            item = NewsContent()
+            item = AllItem()
             soup = BeautifulSoup(response.text,'lxml')
             item['title'] = soup.title.get_text().strip()
             item['source'] = ''.join(response.css('em::text').extract()).strip()

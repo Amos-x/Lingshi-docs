@@ -3,7 +3,7 @@ import json
 import scrapy
 import datetime
 from scrapy import Selector
-from news.items import NewsItem, NewsContent
+from news.items import AllItem
 import requests
 
 class CnbcspiderSpider(scrapy.Spider):
@@ -18,7 +18,7 @@ class CnbcspiderSpider(scrapy.Spider):
             yield scrapy.Request(url,callback=self.next_parse,dont_filter=True,meta={'goal':keyword,'page':1})
 
     def next_parse(self,response):
-        item = NewsItem()
+        item = AllItem()
         searchResultCards = response.xpath('//div[@class="SearchResultCard"]')
         for result in searchResultCards:
             try:
@@ -46,7 +46,7 @@ class CnbcspiderSpider(scrapy.Spider):
 
     def parse(self, response):
         try:
-            item = NewsContent()
+            item = AllItem()
             item['url'] = response.meta['mLink']
             item['title'] = response.xpath('//h1[@class="title"]//text()').extract()[0]
             item['source'] = response.meta['source']
