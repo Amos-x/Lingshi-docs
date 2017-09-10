@@ -27,7 +27,7 @@ MYSQL_DB = 'crawldb'
 
 LOG_LEVEL = 'INFO'
 
-FILES_STORE = 'C:\\Users\Amos\PycharmProjects\images'
+IMAGES_STORE = 'C:\\Users\Amos\PycharmProjects\images'
 
 #FILES_STORE = 'C:\\Users\Amos\PycharmProjects\\News\images'
 #IMAGES_STORE = 'C:\\Users\Amos\PycharmProjects\\News\\files'
@@ -86,7 +86,7 @@ ROBOTSTXT_OBEY = False
 # Configure item pipelines.
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   'news.pipelines.ImageDownloadPipeline':1,
+   'news.pipelines.ImageDownloadPipeline':299,
    'news.pipelines.save_to_mysql': 300,
 }
 

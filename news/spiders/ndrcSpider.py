@@ -11,87 +11,78 @@ import datetime
 
 class NdrcspiderSpider(scrapy.Spider):
     name = 'ndrcSpider'
-    searchKey = ['铜', '铝', '铅', '锌', '债券', '拆借', '美元', '黄金', '原油', '矿']
+    searchKey = ['有色金属','铜', '铝', '铅', '锌', '债券', '拆借', '美元', '黄金', '原油', '矿']
     fromday = datetime.datetime.now().strftime('%Y.%m.%d')  #日期必须匹配%Y.%m.%d，不能为%Y-%m-%d
     today = datetime.datetime.now().strftime('%Y.%m.%d')    #日期必须匹配%Y.%m.%d，不能为%Y-%m-%d
+    url = 'http://www.ndrc.gov.cn/fgwSearch/searchResult.jsp'
+
     def start_requests(self):
         print('start crawling ndrc...')
-        url='http://www.ndrc.gov.cn/fgwSearch/searchResult.jsp'
-        for key in self.searchKey:
-            yield FormRequest(url=url,
-                              formdata={'sword': key, 'type': '1', 'from': self.fromday,'to': self.today,
-                                        'order': '-DOCRELTIME','pageSize':'10'},
+        for keyword in self.searchKey:
+            yield FormRequest(url=self.url,
+                              formdata={'sword': keyword, 'type': '1', 'from': '','to': '',
+                                        'order': '-DOCRELTIME','pageSize':'20'},
                               dont_filter=True,
-                              meta={'key': key,'page':1},
+                              meta={'keyword': keyword,'page':1},
                               callback=self.parse_list)
 
-    #爬取一级新闻列表内容
+    def _time_judgment(self, str_time):
+        now = datetime.datetime.now().strftime('%Y.%m.%d')
+        if str_time == now:
+            return True
+
     def parse_list(self, response):
-        page = response.meta['page']    #当前搜索结果的所显示的页面数
-        key=response.meta['key']    #当前页面的关键字
-        result_list = response.css('.list_04')
+        result_list = response.css('dl.list_04')
         if result_list:
-            allPages=math.ceil(int(response.xpath('//div[@class="sm1"]/font[@class="red2"]/text()').extract()[0])/10)
-            print(self.fromday)
-            print(self.today)
-            print(response.xpath('//div[@class="sm1"]/font[@class="red2"]/text()').extract()[0])
             for result in result_list:
                 try:
-                    time = response.css('font.dateShow::text').extract_first()[3:-1]
-                    title = result.xpath('string(./dt/a)').extract()[0]
-                    content = result.xpath('string(./dd[@class="txt"]/p[position() = 1]/a)').extract()[0]
-                    link = result.xpath('./dd[@class="txt"]/p[position() = 2]/a/text()').extract()[0]
+                    time = result.css('font.dateShow::text').extract_first()
+                    str_time = re.sub(r'[-() ]','',time)
+                    if not self._time_judgment(str_time):
+                        break
                     item = AllItem()
-                    item['title'] = self.replaceCharEntity(title[5:].strip()).replace(" ","")
-                    item['content'] = self.replaceCharEntity(content.strip()).replace(" ","")
-                    item['url'] = link.strip()
-                    item['time'] = time.replace("- (", "").replace(")", "").strip() # 需要对日期进行修改
-                    item['goal_type'] = key  # goal就是所要查找的关键词
+                    item['title'] = re.sub(r'<.*?>','',result.css('dt a::attr(title)').extract_first())
+                    item['url'] = result.css('dt a::attr(href)').extract_first()
+                    item['time'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    item['classify'] = response.meta['keyword']
+                    item['source'] = '国家发展和改革委员会'
+                    item['display'] = '1'
                     item['msite'] = 'ndrc'
-                    item['img_urls'] = None
+                    abstract = ''.join(result.css('dd.txt p')[0].css('a::text').extract()).strip()
+                    item['abstract'] = re.sub(r'<.*?>','',abstract)
+                    item['home_img_url'] = None
                     yield scrapy.Request(url=item['url'],
                                          callback=self.parse_content,
-                                         meta={'Newsitem':item})
-                except:
+                                         meta={'item':item})
+                except Exception as e:
+                    print(e)
                     print('NDRC,Homepage Error')
 
-            # 进行换页,回调
-            if page < allPages:
-                yield FormRequest(url='http://www.ndrc.gov.cn/fgwSearch/searchResult.jsp',
-                          formdata={'sword': key, 'searchword':key,'preSWord':key,'type': '1', 'from': self.fromday ,
-                                    'to': self.today,'wordFlag':'true','order': '-DOCRELTIME', 'page': str(page+1),'pageSize':'10'},
-                          dont_filter=True, callback=self.parse_list, meta={'key': key, 'page': page+1})
     #抓取新闻具体内容
     def parse_content(self, response):
         try:
-            newsitem = response.meta['Newsitem']
-            mTitle = newsitem['title']
-            mSource = '国家发展和改革委员会'
-            response = HtmlResponse(response.url, encoding='utf-8', body=response.body)
-            if len(response.xpath('//div[@class="txt_title1 tleft"]//text()').extract()):
-                mTitle = response.xpath('//div[@class="txt_title1 tleft"]//text()').extract()[0].strip()
-            elif len(response.xpath('//div[@class="txt_title1"]//text()').extract()):
-                mTitle = response.xpath('//div[@class="txt_title1"]//text()').extract()[0].strip()
+            item = response.meta['item']
+            # response = HtmlResponse(response.url, encoding='utf-8', body=response.body)
+            # if len(response.xpath('//div[@class="txt_title1 tleft"]//text()').extract()):
+            #     mTitle = response.xpath('//div[@class="txt_title1 tleft"]//text()').extract()[0].strip()
+            # elif len(response.xpath('//div[@class="txt_title1"]//text()').extract()):
+            #     mTitle = response.xpath('//div[@class="txt_title1"]//text()').extract()[0].strip()
+            #
+            # if len(response.xpath('//div[@id="dSourceText"]//text()').extract()):
+            #     mSource = response.xpath('//div[@id="dSourceText"]//text()').extract()[0].strip()
 
-            if len(response.xpath('//div[@id="dSourceText"]//text()').extract()):
-                mSource = response.xpath('//div[@id="dSourceText"]//text()').extract()[0].strip()
-
-            article = response.xpath('//div[@id="zoom"]|//td[@id="zoom"]').extract()
+            # article = response.xpath('//div[@id="zoom"]|//td[@id="zoom"]').extract()
+            article = response.css('#zoom p').extract()
             if article:
-                article = article[0]
-                content = self.dispose(article).strip()
-                item = AllItem()
-                item['title'] = mTitle
-                item['source'] = mSource
-                item['content'] = content
-                item['img_urls'] = [urljoin(response.url,url) for url in response.css('#zoom img::attr(src)').extract()]
-                item['file_urls'] = []
-                item['url'] = response.url
-                item['msite']='ndrc'
-                yield newsitem
+                # article = article[0]
+                # content = self.dispose(article).strip()
+                item['content'] = ''.join(article)
+                content_img_urls = [urljoin(response.url,url) for url in response.css('#zoom img::attr(src)').extract()]
+                item['content_img_urls'] = (content_img_urls if content_img_urls else None)
                 yield item
 
-        except:
+        except Exception as e:
+            print(e)
             print('NDRC，Content Error')
 
     #去除html中特殊的符号

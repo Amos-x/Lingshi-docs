@@ -36,43 +36,41 @@ class YahooSpider(scrapy.Spider):
                     item['title'] = group.css('.title a::text').extract_first()
                     item['url'] = group.css('.title a::attr(href)').extract_first()
                     item['time'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                    item['content'] = group.css('.compText p::text').extract_first()
+                    item['abstract'] = group.css('.compText p::text').extract_first()
                     item['msite'] = 'yahoo'
-                    item['goal_type'] = response.meta['goal']
-                    item['img_urls'] = group.css('img.s-img::attr(data-src)').extract()
+                    item['classify'] = response.meta['goal']
+                    item['source'] = group.css('.compTitle div .cite::text').extract_first()
+                    item['display'] = '1'
+                    item['home_img_url'] = group.css('img.s-img::attr(data-src)').extract_first()
                     if 'yahoo.com/news' in item['url']:
-                        yield scrapy.Request(item['url'], callback=self.parse, meta={'url': item['url'],'newsitem':item})
+                        yield scrapy.Request(item['url'], callback=self.parse, meta={'item':item})
         except:
             print('YAHOO，Homepage Error')
     # 爬取新闻内容
     def parse(self, response):
         try:
-            contentElements = response.xpath(
-                './/div[@id="Col1-0-ContentCanvas"]/article/div/p|.//div[@id="Col1-0-ContentCanvas"]/article/div/figure/div/img|.//div[@id="Col1-0-ContentCanvas"]/article/div/ul').extract()
-            content = ""
-            pPattern = '<p class='
-            for contents in contentElements:
-                if re.match(r'<img (.+?)>',contents):
-                    content = content + '<p>'+ contents +'</p>'
-                if re.match(pPattern, contents):
-                    string = re.compile('content="(.*?)" data-reactid').findall(contents)
-                    if len(string) == 0:
-                        continue
-                    content = content + " <p> " + string[-1] + " </p>"
-            item = AllItem()
-            item['title'] = response.xpath('.//div/header[@class="canvas-header"]/h1/text()').extract_first()
-            item['url'] = response.url
-            item['source'] = response.xpath('.//span[@class="provider-link"]/a/text()').extract_first()
-            item['content'] = content
-            item['msite'] = 'yahoo'
-            img = response.css('article img::attr(src)').extract()
-            if img:
-                item['img_urls'] = img[:int(len(img)/2)]
-            else:
-                item['img_urls'] = None
-            item['file_urls'] = None
-            newsitem = response.meta['newsitem']
-            yield newsitem
-            yield item
+            item = response.meta['item']
+            # contentElements = response.xpath(
+            #     './/div[@id="Col1-0-ContentCanvas"]/article/div/p|.//div[@id="Col1-0-ContentCanvas"]/article/div/figure/div/img|.//div[@id="Col1-0-ContentCanvas"]/article/div/ul').extract()
+            # content = ""
+            # pPattern = '<p class='
+            # for contents in contentElements:
+            #     if re.match(r'<img (.+?)>',contents):
+            #         content = content + '<p>'+ contents +'</p>'
+            #     if re.match(pPattern, contents):
+            #         string = re.compile('content="(.*?)" data-reactid').findall(contents)
+            #         if len(string) == 0:
+            #             continue
+            #         content = content + " <p> " + string[-1] + " </p>"
+            content = response.css('div#Col1-0-ContentCanvas article p').extract()
+            item['content'] = ''.join(content)
+            content_img_urls = response.css('div#Col1-0-ContentCanvas article img::attr(src)').extract()
+            item['content_img_urls'] = (content_img_urls if content_img_urls else None)
+            # if img:
+            #     item['img_urls'] = img[:int(len(img)/2)]
+            # else:
+            #     item['img_urls'] = None
+            if item['content']:
+                yield item
         except:
             print('YAHOO,Content Error')

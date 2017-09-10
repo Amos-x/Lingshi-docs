@@ -10,9 +10,6 @@ class SmmSpider(scrapy.Spider):
     name = 'SMM'
     start_urls = ['http://www.smm.cn/']
     serach_urlheaders = 'https://news.smm.cn/news/'
-    custom_settings = {'ITEM_PIPELINES': {
-   'news.pipelines.ImageDownloadPipeline':1,
-   'news.pipelines.save_to_mysql': 300,}}
 
     def start_requests(self):
         keywords =['铜','铝','铅','锌']
@@ -37,7 +34,7 @@ class SmmSpider(scrapy.Spider):
                 item = AllItem()
                 item['title'] = news['Title']
                 item['url'] = self.serach_urlheaders + news['ID']
-                item['time'] = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+                item['time'] = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(news['UpdateTime']))
                 item['msite'] = 'smm'
                 item['source'] = (news['Source'] if news['Source'] else '上海有色网')
                 item['classify'] = response.meta['goal']
@@ -57,10 +54,13 @@ class SmmSpider(scrapy.Spider):
                 if content[x] == '<hr>':
                     content = content[:x]
                     break
-            item['content'] = ''.join(content)
-            img_urls = response.css('article p img::attr(src)').extract()
-            item['content_img_urls'] = (img_urls if img_urls else None)
-            yield item
+            item['content'] = (''.join(content) if content else None)
+            if item['content']:
+                if not item['abstract']:
+                    item['abstract'] = re.sub(r'<.*?>','',item['content'][:300]).strip()
+                img_urls = response.css('article p img::attr(src)').extract()
+                item['content_img_urls'] = (img_urls if img_urls else None)
+                yield item
         except Exception as e:
             print(e)
             print('内容解析错误')

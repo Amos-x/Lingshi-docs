@@ -22,19 +22,19 @@ class CnbcspiderSpider(scrapy.Spider):
         searchResultCards = response.xpath('//div[@class="SearchResultCard"]')
         for result in searchResultCards:
             try:
-                mLink = result.xpath('./h3/a/@href').extract()[0]
+                mLink = result.xpath('./h3/a/@href').extract_first()
                 if 'video' in mLink:
                     continue
                 item['url'] = mLink
-                item['title'] = result.xpath('./h3//text()').extract()[0]
+                item['title'] = result.xpath('./h3//text()').extract_first()
                 item['time'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                item['content'] = result.xpath('./p//text()').extract()[0]
-                item['goal_type'] = response.meta['goal']
+                item['abstract'] = result.xpath('./p//text()').extract_first()
+                item['classify'] = response.meta['goal']
                 item['msite'] = 'cnbc'
-                item['img_urls'] = []
-                source = result.css('span.source::text').extract_first()
-                yield item
-                yield scrapy.Request(mLink, callback=self.parse, meta={'mLink': mLink,'source':source})
+                item['display'] = '1'
+                item['source'] = result.css('span.source::text').extract_first()
+                item['home_img_url'] = None
+                yield scrapy.Request(mLink, callback=self.parse, meta={'item':item})
             except Exception as e:
                 print(e)
                 print('CNBC，Homepage Error')
@@ -42,17 +42,13 @@ class CnbcspiderSpider(scrapy.Spider):
         #翻页
         if searchResultCards:
             url = response.url[0:-1] + str(response.meta['page']+1)
-            yield scrapy.Request(url,callback=self.next_parse,meta={'goal':response.meta['goal'],'page':response.meta['page']+1})
+            yield scrapy.Request(url,callback=self.next_parse,dont_filter=True,meta={'goal':response.meta['goal'],'page':response.meta['page']+1})
 
     def parse(self, response):
         try:
-            item = AllItem()
-            item['url'] = response.meta['mLink']
-            item['title'] = response.xpath('//h1[@class="title"]//text()').extract()[0]
-            item['source'] = response.meta['source']
-            item['img_urls'] = response.xpath('//div[@id="article_body"]//img/@src').extract()
-            item['msite'] = 'cnbc'
-            item['file_urls'] = None
+            item = response.meta['item']
+            content_img_urls = response.xpath('//div[@id="article_body"]//img/@src').extract()
+            item['content_img_urls'] = (content_img_urls if content_img_urls else None)
             # 获取表格数据
             tableList = response.xpath('//div[@id="article_body"]//table')
             if len(tableList) > 0:  #判断是否需要表格
@@ -75,11 +71,10 @@ class CnbcspiderSpider(scrapy.Spider):
                 res = requests.get(tempUrl)
                 results = json.loads(res.text[14:-1])['QuickQuoteResult']['QuickQuote']
 
-                item['content'] = self._parse_text(response, results)
-                yield item
+                item['content'] = ''.join(self._parse_text(response, results))
             else:
-                item['content'] = self._parse_text(response=response)
-                yield item
+                item['content'] = ''.join(self._parse_text(response=response))
+            yield item
         except:
             print('CNBC,Content Error')
 

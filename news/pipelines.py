@@ -32,11 +32,11 @@ class ImageDownloadPipeline(ImagesPipeline):
         if item['content_img_urls']:
             for img_url in item['content_img_urls']:
                 yield scrapy.Request(img_url.strip(),meta={'msite':item['msite']})
+            item['content_img_urls'] = ','.join(item['content_img_urls'])
 
     def item_completed(self, results, item, info):
         """
         得到图片地址，将地址赋值给对应item，并将内容中的图片链接替换成图片地址
-        要求内容的图片链接需为完整链接，否则则需要增加一个item字段用来再内容中匹配原链接进行替换。
         """
         try:
             img_paths = ['http://eip.hkmtl.com/images/'+ x['path'] for ok, x in results if ok]
@@ -51,7 +51,6 @@ class ImageDownloadPipeline(ImagesPipeline):
                         for img_path in img_paths[1:]:
                             item['content'] = re.sub(r'<img src="replace">','<img src="'+img_path+'">',item['content'],1)
                 else:
-                    item['home_img_path'] = None
                     if item['content_img_urls']:
                         item['content_img_paths'] = ','.join(img_paths)
                         for img_path in img_paths:
@@ -89,11 +88,11 @@ class save_to_mysql(object):
 
     def process_item(self,item,spider):
         try:
-            sql = 'insert into news_item values(NULL,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'
+            sql = 'insert into news_item values(NULL,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'
             self.cursor.execute(sql,(item['title'],item['url'],item['time'],item['msite'],item['source'],
                                      item['classify'],item['display'],item['abstract'],item['content'],
                                      item['home_img_url'],item['home_img_path'],item['content_img_urls'],
-                                     item['content_img_paths'],item['file_urls'],item['file_paths']))
+                                     item['content_img_paths']))
             self.db.commit()
         except Exception as e:
             print(item)

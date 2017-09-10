@@ -10,10 +10,9 @@ from urllib.request import urljoin
 
 class XinhuaSpider(scrapy.Spider):
     name = 'XINHUA'
-    # allowed_domains = ['www.news.cn']
     start_urls = ['http://www.news.cn/']
 
-    keywords = ['债券','拆借','美元','黄金','原油']
+    keywords = ['有色金属','债券','拆借','美元','黄金','原油']
     url = 'http://so.news.cn/getNews?keyword=%E9%BB%84%E9%87%91&curPage=1&sortField=0&searchFields=1'
     def start_requests(self):
         print('start crawling XINHUA...')
@@ -41,45 +40,42 @@ class XinhuaSpider(scrapy.Spider):
                 item = AllItem()
                 item['title'] = re.sub(r"[<>/='a-z]", '', group['title']).replace(' ', '')
                 item['url'] = group['url']
-                item['time'] = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+                item['time'] = group['pubtime']
+                item['classify'] = keyword
                 item['msite'] = 'xinhua'
-                item['img_urls'] = None
+                item['display'] = '1'
+                item['source'] =  ('新华网'+group['sitename'] if '频道' in group['sitename'] else group['sitename'])
+                item['home_img_url'] = ('http://tpic.home.news.cn/xhCloudNewsPic/'+group['imgUrl'] if group['imgUrl'] else None)
                 if group['des']:
-                    item['content'] = re.sub(r"[<>/='a-z]",'',group['des']).replace(' ','')
+                    item['abstract'] = re.sub(r"[<>/='a-z]",'',group['des']).replace(' ','')
                 else:
-                    item['content'] = None
-                item['goal_type'] = keyword
-                sitename = group['sitename']
-                yield scrapy.Request(group['url'],callback=self.parse,meta={'s_n':sitename,'newsitem':item})
-            except:
+                    item['abstract'] = None
+                yield scrapy.Request(group['url'],callback=self.parse,meta={'item':item})
+            except Exception as e:
+                print(e)
                 print('XINHUA,Homepage Error')
                 pass
         last_date = data[-1]['pubtime'][:10]
         if self._timejudgement(last_date):
             page_num = int(result['curPage']) + 1
-            page = 'curPage'+str(page_num)
+            page = 'curPage='+str(page_num)
             url = re.sub('curPage=\d',page,response.url)
-            yield scrapy.Request(url,callback=self.next_parse,meta={'page':page_num})
+            yield scrapy.Request(url,callback=self.next_parse,dont_filter=True)
 
     def parse(self, response):
         try:
-            item = AllItem()
+            item = response.meta['item']
             soup = BeautifulSoup(response.text,'lxml')
-            item['title'] = soup.title.get_text().strip()
-            item['source'] = ''.join(response.css('em::text').extract()).strip()
-            if not item['source']:
-                item['source'] = '新华网'+response.meta['s_n']
-            item['url'] = response.url
-            item['msite'] = 'xinhua'
-            item['content'] = [str(a) for a in soup.select('p')[0].parent.select('p')]
+            content = [str(a) for a in soup.select('p')[0].parent.select('p')]
+            item['content'] = ''.join(content)
             img_id = [i.get('src') for i in soup.select('p')[0].parent.select('p img')]
             if img_id:
-                item['img_urls'] = [urljoin(response.url,x) for x in img_id if not 'http' in x]
+                item['content_img_urls'] = [urljoin(response.url,x) for x in img_id if not 'http' in x]
             else:
-                item['img_urls'] = None
-            item['file_urls'] = None
-            newsitem = response.meta['newsitem']
-            yield newsitem
-            yield item
+                item['content_img_urls'] = None
+            if item['content']:
+                if not item['abstract']:
+                    item['abstract'] = re.sub(r'<.*?>','',item['content'][:300]).strip()
+                yield item
         except:
             print('XINHUA，Content Error')

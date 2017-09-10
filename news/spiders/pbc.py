@@ -11,7 +11,6 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 class PbcSpider(scrapy.Spider):
     name = "pbc"
-    # allowed_domains = [".pbc.gov.cn"]
     keywords = ['铜', '铝', '铅', '锌', '债券', '拆借', '美元', '黄金', '原油', '矿', 'copper', 'mine', 'lending rates', 'bonds']
 
     def __init__(self):

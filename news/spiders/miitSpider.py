@@ -14,7 +14,7 @@ class MiitspiderSpider(scrapy.Spider):
 
     def start_requests(self):
         print('start crawling miit...')
-        keywords = ['铜', '铝', '铅', '锌', '债券', '拆借', '美元', '黄金', '原油', '矿']
+        keywords = ['铜', '铝', '铅', '锌', '债券', '拆借', '美元', '黄金', '原油', '矿','有色金属']
         for keyword in keywords:
             yield FormRequest(url=self.start_urls,
                               formdata={'pageSize': '10', 'pageNow': '1', 'sortFlag': '-1', 'sortKey': 'showTime',
@@ -40,56 +40,65 @@ class MiitspiderSpider(scrapy.Spider):
                 item['title'] = news['name']
                 item['url'] = news['url']
                 item['time'] = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
-                item['content'] = news['summaries']
+                item['abstract'] = re.sub(r'<.*?>','',news['summaries'])
                 item['msite'] = 'miit'
-                item['goal_type'] = response.meta['goal']
-                item['img_urls'] = None
-                yield item
-                yield scrapy.Request(news['url'],callback=self.parse,meta={'url':news['url']})
+                item['classify'] = response.meta['goal']
+                item['display'] = '1'
+                item['home_img_url'] = None
+                yield scrapy.Request(news['url'],callback=self.parse,meta={'item':item})
             except:
                 print('MIIT,Homepage Error')
         if self._time_judgment(new_list[-1]['showTime']):
-            yield FormRequest(url=self.start_urls[0],
+            yield FormRequest(url=self.start_urls,dont_filter=True,
                               formdata={'pageSize': '10', 'pageNow': str(page_now + 1), 'sortFlag': '-1', 'sortKey': 'showTime',
                                         'sortType': '1', 'urls': 'http://www.miit.gov.cn/', 'fullText': response.meta['keyword']},
                               callback=self.next_parse)
                               
     def parse(self, response):
         try:
-            item = AllItem()
-            content = response.text
-            title = response.xpath('/html/head/title/text()').extract()[0]
-            pattern = re.compile(
-                r'<!--start component 文档组件[\((](new|正文|文件发布正文)[\))]-->([\s\S]*?)<!--end component 文档组件[\((](new|正文|文件发布正文)[\))]-->')
-            moudle = pattern.findall(content)
-            content = self.dispose("".join(moudle[len(moudle) - 1][1])).strip()
-            content = content.replace(title, "")
-            ioprint = re.compile('<a.*?onclick.*?【打印】<\/a>')
-            ioclose = re.compile('<a.*?onclick.*?【关闭】<\/a>')
-            doc_pattern = re.compile('<a.*?href="(.*?)">.*?<\/a>')
-            content = re.sub(ioprint, "", content)
-            content = re.sub(ioclose, "", content)
-            file_urls = doc_pattern.findall(content)
-            if "【打印】" or "【关闭】" in content:
-                content = content.replace("【打印】", "")
-                content = content.replace("【关闭】", "")
-            content = "<p>" + content + "</p>"
-            item['title'] = title
-            item['url'] = response.meta['url']
-            item['source'] = "工信部"
-            item['content'] = content
-            item['msite'] = "miit"
-            item['img_urls'] = None
-            if file_urls:
-                files = []
-                for x in file_urls:
-                    if ''.join(x.split('/')[:2]) =='....':
-                          files.append(x)
-                item['file_urls'] = [urljoin(response.url,file_url) for file_url in files]
+            item = response.meta['item']
+            # content = response.text
+            # title = response.xpath('/html/head/title/text()').extract()[0]
+            # pattern = re.compile(
+            #     r'<!--start component 文档组件[\((](new|正文|文件发布正文)[\))]-->([\s\S]*?)<!--end component 文档组件[\((](new|正文|文件发布正文)[\))]-->')
+            # moudle = pattern.findall(content)
+            # content = self.dispose("".join(moudle[len(moudle) - 1][1])).strip()
+            # content = content.replace(title, "")
+            # ioprint = re.compile('<a.*?onclick.*?【打印】<\/a>')
+            # ioclose = re.compile('<a.*?onclick.*?【关闭】<\/a>')
+            # content = re.sub(ioprint, "", content)
+            # content = re.sub(ioclose, "", content)
+            # doc_pattern = re.compile('<a.*?href="(.*?)">.*?<\/a>')
+            # file_urls = doc_pattern.findall(content)
+            # if "【打印】" or "【关闭】" in content:
+            #     content = content.replace("【打印】", "")
+            #     content = content.replace("【关闭】", "")
+            # content = "<p>" + content + "</p>"
+            try:
+                source = response.css('div.cinfo.center span::text').extract()[1][4:]
+            except:
+                source = None
+            item['source'] = (source if source else "工信部")
+            content = response.css('div.ccontent.center p').extract()
+            if not content:
+                return
+            item['content'] = ''.join(content)
+            content_img_urls = response.css('div.ccontent.center p img::attr(src)').extract()
+            if content_img_urls:
+                item['content_img_urls'] = [urljoin(response.url,img_url) for img_url in content_img_urls]
             else:
-                item['file_urls'] = None
+                item['content_img_urls'] = None
+            # if file_urls:
+            #     files = []
+            #     for x in file_urls:
+            #         if ''.join(x.split('/')[:2]) =='....':
+            #               files.append(x)
+            #     item['file_urls'] = [urljoin(response.url,file_url) for file_url in files]
+            # else:
+            #     item['file_urls'] = None
             yield item
-        except:
+        except Exception as e:
+            print(e)
             print('MIIT,Content Error')
 
     def replaceCharEntity(self,htmlstr):
