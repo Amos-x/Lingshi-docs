@@ -12,9 +12,10 @@ class CnbcspiderSpider(scrapy.Spider):
     def start_requests(self):
         print('start crawking cnbc...')
         keywords = ['dollar', 'lending rates', 'bonds', 'cpooer']
+        param = 'CNBC.com,The Reformed Broker,Buzzfeed,Estimize,Curbed,Polygon,Racked,Eater,SB Nation,Vox,The Verge,Recode,Breakingviews,NBC News,The Today Show,Fiscal Times,The New York Times,Financial Times,USA Today'
         for keyword in keywords:
             url = ('http://search.cnbc.com/rs/search/view.html?partnerId=2000&keywords='
-                   + keyword + '&sort=date&source=CNBC.com,Today&pubtime=7&pubfreq=d&page=1')
+                   + keyword + '&sort=date&source='+param+'&pubtime=24&pubfreq=h&page=1')
             yield scrapy.Request(url,callback=self.next_parse,dont_filter=True,meta={'goal':keyword,'page':1})
 
     def next_parse(self,response):
