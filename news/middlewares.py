@@ -59,23 +59,15 @@ class NewsSpiderMiddleware(object):
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)
 
-class PbcSeleniumMiddleware(object):
+class SeleniumMiddleware(object):
     """一个selenium中间件，用浏览器代替下载器进行请求，并返回html"""
 
     def __init__(self):
-        self.browser = webdriver.Chrome()
+        self.browser = webdriver.Chrome()  #phantomjs
         self.wait = WebDriverWait(self.browser, 20)
-        self.browser.get('')
-        self.input_window = self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'table tbody input#pubDate')))
-        self.button = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'table tbody img#button')))
+        self.browser.maximize_window()
 
     def process_request(self,request,spider):
-        datetime = request.meta['time']
-        self.input_window.clear()
-        self.input_window.send_keys(datetime)
-        self.button.click()
-        self.browser.switch_to_window(self.browser.window_handles[-1])
+        self.browser.get(request.url)
         html = self.browser.page_source
-        self.browser.close()
-        self.browser.switch_to_window(self.browser.window_handles[0])
-        return HtmlResponse(datetime,body=html,encoding='utf-8')
+        return HtmlResponse(url=self.browser.current_url,body=html,encoding='utf-8')
