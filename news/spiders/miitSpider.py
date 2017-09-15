@@ -30,13 +30,13 @@ class MiitspiderSpider(scrapy.Spider):
             return True
 
     def next_parse(self, response):
-        item = AllItem()
         new_list = json.loads(response.text)['array']
         page_now = int(json.loads(response.text)['pageNow'])
         for news in new_list:
             try:
                 if not self._time_judgment(news['showTime']):
                     break
+                item = AllItem()
                 item['title'] = news['name']
                 item['url'] = news['url']
                 item['time'] = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))

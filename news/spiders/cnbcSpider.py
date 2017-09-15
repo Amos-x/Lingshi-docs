@@ -19,13 +19,13 @@ class CnbcspiderSpider(scrapy.Spider):
             yield scrapy.Request(url,callback=self.next_parse,dont_filter=True,meta={'goal':keyword,'page':1})
 
     def next_parse(self,response):
-        item = AllItem()
         searchResultCards = response.xpath('//div[@class="SearchResultCard"]')
         for result in searchResultCards:
             try:
                 mLink = result.xpath('./h3/a/@href').extract_first()
                 if 'video' in mLink:
                     continue
+                item = AllItem()
                 item['url'] = mLink
                 item['title'] = result.xpath('./h3//text()').extract_first()
                 item['time'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
