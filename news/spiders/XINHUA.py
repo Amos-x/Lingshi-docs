@@ -32,13 +32,20 @@ class XinhuaSpider(scrapy.Spider):
         result = json.loads(response.text)['content']
         data = result['results']
         keyword = result['keyword']
-        for group in data:
+        titlelist = []
+        datalist = []
+        for x in data:
+            if x['title'] not in titlelist:
+                titlelist.append(x['title'])
+                datalist.append(x)
+        for group in datalist:
             try:
                 str_time = group['pubtime'][:10]
                 if not self._timejudgement(str_time):
                     break
                 item = AllItem()
                 item['title'] = re.sub(r"[<>/='a-z]", '', group['title']).replace(' ', '')
+
                 item['url'] = group['url']
                 item['time'] = group['pubtime']
                 item['classify'] = keyword
