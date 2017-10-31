@@ -45,7 +45,6 @@ class XinhuaSpider(scrapy.Spider):
                     break
                 item = AllItem()
                 item['title'] = re.sub(r"[<>/='a-z]", '', group['title']).replace(' ', '')
-
                 item['url'] = group['url']
                 item['time'] = group['pubtime']
                 item['classify'] = keyword

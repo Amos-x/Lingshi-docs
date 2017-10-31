@@ -21,7 +21,6 @@ class PeoplehouseSpider(scrapy.Spider):
     def next_parse(self,response):
         try:
             datalist = response.css('div.fl.p2j_list ul.list_14 li')
-            print(len(datalist))
             for group in datalist:
                 strtime = group.css('i::text').extract_first()[:10]
                 if not self._time_judgment(strtime):
