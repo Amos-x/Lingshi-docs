@@ -22,8 +22,8 @@ class PmcaffSpider(scrapy.Spider):
             article_list = response.css('ul.list-group li.list-group-item')
             for article in article_list:
                 pub_time = article.css('span.pub-time::attr(title)').extract_first()
-                # if not self._time_judgment(pub_time[:10]):
-                #     break
+                if not self._time_judgment(pub_time[:10]):
+                     break
                 item = AllItem()
                 item['title'] = article.css('h2.news-title a::text').extract_first()
                 item['url'] = article.css('h2.news-title a::attr(href)').extract_first()
