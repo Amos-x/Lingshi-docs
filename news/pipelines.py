@@ -65,7 +65,7 @@ class ImageDownloadPipeline(ImagesPipeline):
 class ContentClean(object):
     def process_item(self,item,spider):
         content = item['content']
-        item['content'] = re.sub(r'<script.*?</script>','*',content)
+        item['content'] = re.sub(r'<script.*?</script>','',content)
         return item
 
 class save_to_mysql(object):
