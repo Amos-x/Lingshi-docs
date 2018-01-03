@@ -86,7 +86,8 @@ ROBOTSTXT_OBEY = False
 # Configure item pipelines.
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   'news.pipelines.ImageDownloadPipeline':299,
+   'news.pipelines.ImageDownloadPipeline':298,
+   'news.pipelines.ContentClean': 299,
    'news.pipelines.save_to_mysql': 300,
 }
 
