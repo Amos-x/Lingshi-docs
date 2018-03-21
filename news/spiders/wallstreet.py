@@ -30,6 +30,7 @@ class WallstreetSpider(scrapy.Spider):
                 item['time'] = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(group['display_time']))
                 item['msite'] = 'wallstreetcn'
                 item['source'] = '华尔街见闻 作者：'+ group['author']['display_name']
+                item['news_type'] = '金融'
                 classify = group['categories']
                 item['classify'] = (' '.join(classify) if classify else None)
                 item['display'] = '1'

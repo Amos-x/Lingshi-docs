@@ -36,6 +36,7 @@ class WoshipmSpider(scrapy.Spider):
                 item['time'] = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
                 item['msite'] = 'woshipm'
                 item['source'] = '人人都是产品经理'
+                item['news_type'] = '产品'
                 item['display'] = '1'
                 item['classify'] = response.meta['classify']
                 item['abstract'] = postitem.css('div.content p.des::text').extract_first()

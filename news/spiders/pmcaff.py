@@ -30,6 +30,7 @@ class PmcaffSpider(scrapy.Spider):
                 item['time'] = pub_time
                 item['msite'] = 'pmcaff'
                 item['source'] = '互联网产品研究中心'
+                item['news_type'] = '产品'
                 item['classify'] = '产品经理'
                 item['display'] = '1'
                 item['home_img_url'] = article.css('div.pic-banner img::attr(src)').extract_first()

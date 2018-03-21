@@ -21,5 +21,5 @@ class AllItem(scrapy.Item):
     home_img_path = scrapy.Field()                  # 列表图片保存地址
     content_img_urls = scrapy.Field()               # 内容图片原网址
     content_img_paths = scrapy.Field()              # 内容图片保存地址
-
+    news_type = scrapy.Field()                      # 新闻大类型
 

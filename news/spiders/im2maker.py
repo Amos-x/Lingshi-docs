@@ -31,6 +31,7 @@ class Im2makerSpider(scrapy.Spider):
                 item['url'] = group['url']
                 item['time'] = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(int(group['inputtime'])))
                 item['source'] = '镁客网'
+                item['news_type'] = '科技'
                 item['msite'] = 'im2maker'
                 item['classify'] = (group['keywords'] if group['keywords'] else None)
                 item['display'] = '1'

@@ -33,6 +33,7 @@ class A36krSpider(scrapy.Spider):
                 item['time'] = group['updated_at']
                 item['msite'] = '36kr'
                 item['source'] = '36氪'
+                item['news_type'] = '科技'
                 classify = json.loads(group['extraction_tags'])
                 tags = []
                 for x in classify:

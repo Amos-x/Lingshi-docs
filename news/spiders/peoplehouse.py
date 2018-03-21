@@ -30,6 +30,7 @@ class PeoplehouseSpider(scrapy.Spider):
                 item['url'] = urljoin(self.url,group.css('a::attr(href)').extract_first())
                 item['time'] = group.css('i::text').extract_first()
                 item['msite'] = 'house.people'
+                item['news_type'] = '地产'
                 item['classify'] = '房地产'
                 item['display'] = 1
                 item['home_img_url'] = None

@@ -32,6 +32,7 @@ class TmtpostSpider(scrapy.Spider):
                     item['time'] = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(int(group['time_published'])))
                     item['msite'] = 'tmtpost'
                     item['source'] = group['authors'][0]['username']
+                    item['news_type'] = '科技'
                     tags = []
                     for x in group['tags']:
                         tags.append(x['tag'])

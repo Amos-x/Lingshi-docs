@@ -31,6 +31,7 @@ class Chanpin100Spider(scrapy.Spider):
                 item['time'] = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
                 item['msite'] = 'chanpin100'
                 item['source'] = '产品壹佰'
+                item['news_type'] = '产品'
                 item['classify'] = response.meta['section_name']
                 item['display'] = '1'
                 item['abstract'] = article.css('p.article-summary::text').extract_first().strip()

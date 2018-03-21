@@ -1,5 +1,7 @@
-News_Crawler 
+## News_Crawler 
+    æ–°é—»çˆ¬è™«ï¼Œçˆ¬å–äº†ä¸€äº›æ–°é—»èµ„è®¯ç½‘ç«™ï¼Œæ›´æ–°å†…å®¹ï¼Œå›¾ç‰‡ç­‰ï¼Œå¸¦ç½‘ç«™æ ¼å¼ã€‚
 
-Ò»¸öÐÂÎÅÅÀ³æ£¬ÅÀÈ¡Ò»Ð©ÍøÕ¾µÄÌØ¶¨¹Ø¼ü´ÊµÄµ±ÌìµÄÐÂÎÅ£¬²¢´æÈëÊý¾Ý¿â¡£
-³õ°æ£¬Ö»ÓÐ¼òµ¥µÄspiderÎÄ¼þ¡£
-ÈÕºóÔÙ¼ÌÐø¸üÐÂ
+
+### çŽ¯å¢ƒ
+- python 3.6
+- scrapy 1.5

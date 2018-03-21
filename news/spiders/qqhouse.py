@@ -30,6 +30,7 @@ class QqhouseSpider(scrapy.Spider):
                 item['url'] = group.css('a::attr(href)').extract_first()
                 item['time'] = time.strftime('%Y-%m-%d',time.localtime(time.time()))
                 item['msite'] = 'qq.house'
+                item['news_type'] = '地产'
                 item['classify'] = '房地产'
                 item['display'] = 1
                 item['home_img_url'] = None

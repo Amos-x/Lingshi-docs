@@ -12,7 +12,7 @@ class XinhuaSpider(scrapy.Spider):
     name = 'XINHUA'
     start_urls = ['http://www.news.cn/']
 
-    keywords = ['有色金属','债券','拆借','美元','黄金','原油']
+    keywords = ['债券','拆借','美元','黄金','原油']
     url = 'http://so.news.cn/getNews?keyword=%E9%BB%84%E9%87%91&curPage=1&sortField=0&searchFields=1'
     def start_requests(self):
         print('start crawling XINHUA...')
@@ -51,6 +51,7 @@ class XinhuaSpider(scrapy.Spider):
                 item['msite'] = 'xinhua'
                 item['display'] = '1'
                 item['source'] =  ('新华网'+group['sitename'] if '频道' in group['sitename'] else group['sitename'])
+                item['news_type'] = '金融'
                 item['home_img_url'] = ('http://tpic.home.news.cn/xhCloudNewsPic/'+group['imgUrl'] if group['imgUrl'] else None)
                 if group['des']:
                     item['abstract'] = re.sub(r"[<>/='a-z]",'',group['des']).replace(' ','')

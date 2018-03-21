@@ -95,11 +95,11 @@ class save_to_mysql(object):
 
     def process_item(self,item,spider):
         try:
-            sql = 'insert into news_item values(NULL,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'
+            sql = 'insert into news_item(id,title,url,time,msite,source,classify,display,abstract,content,home_img_url,home_img_path,content_img_urls,content_img_paths,type) values(NULL,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'
             self.cursor.execute(sql,(item['title'],item['url'],item['time'],item['msite'],item['source'],
                                      item['classify'],item['display'],item['abstract'],item['content'],
                                      item['home_img_url'],item['home_img_path'],item['content_img_urls'],
-                                     item['content_img_paths']))
+                                     item['content_img_paths'],item['news_type']))
             self.db.commit()
         except Exception as e:
             print(item)

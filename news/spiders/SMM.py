@@ -8,16 +8,15 @@ import re
 
 class SmmSpider(scrapy.Spider):
     name = 'SMM'
-    start_urls = ['http://www.smm.cn/']
     serach_urlheaders = 'https://news.smm.cn/news/'
 
     def start_requests(self):
-        keywords =['铜','铝','铅','锌']
+        # keywords =['铜','铝','铅','锌']
+        type_id = ['01','04']
         print('start crawling SMM...')
-        for keyword in keywords:
-            key_encode = urllib.request.quote('要闻/'+keyword)
-            url = 'https://platform.smm.cn/newscenter/news/list/'+key_encode+'/1?page_limit=30'
-            yield scrapy.Request(url,callback=self.next_parse,dont_filter=True,meta={'goal':keyword})
+        for id_num in type_id:
+            url = 'https://news.smm.cn/l/%s' %id_num
+            yield scrapy.Request(url,callback=self.next_parse,dont_filter=True)
 
     def _time_judgment(self,str_time):
         now = time.localtime(time.time())
@@ -26,21 +25,23 @@ class SmmSpider(scrapy.Spider):
             return True
 
     def next_parse(self,response):
-        news_List = json.loads(response.text)['data']
+        news_List = response.css('ul.news-body-cont-list li.news_item')
         for news in news_List:
             try:
-                if not self._time_judgment(news['Date']):
+                label = news.css('div.newslist-tool label::text').extract_first()
+                date_time = label[-10:]
+                if not self._time_judgment(date_time):
                     break
                 item = AllItem()
-                item['title'] = news['Title']
-                item['url'] = self.serach_urlheaders + news['ID']
-                item['time'] = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(news['UpdateTime']))
+                item['title'] = news.css('div.newslist-title h3::text').extract_first()
+                item['url'] = news.css('div.newslist-title a::attr(href)').extract_first()
+                item['time'] = date_time
                 item['msite'] = 'smm'
-                item['source'] = (news['Source'] if news['Source'] else '上海有色网')
-                item['classify'] = response.meta['goal']
+                item['source'] = (label[:-11] if label[:-11] else 'SMM')
+                item['news_type'] = '有色'
+                item['classify'] = ' '.join(news.css('div.newslist-label a::text').extract())
                 item['display'] = '1'
-                item['abstract'] = (news['Profile'] if news['Profile'] else None)
-                item['home_img_url'] = (news['Thumb'] if news['Thumb'] else None)
+                item['home_img_url'] = news.css('div.newslist-img img::attr(src)').extract_first()
                 yield scrapy.Request(item['url'],callback=self.parse,meta={'item':item})
             except Exception as e:
                 print(e)
@@ -49,16 +50,12 @@ class SmmSpider(scrapy.Spider):
     def parse(self, response):
         try:
             item = response.meta['item']
-            content = response.xpath('//*[@id="content"]/div[3]/article/div/p|//*[@id="content"]/div[3]/article/div/table|//*[@id="content"]/div[3]/article/div/hr').extract()
-            for x in range(len(content)):
-                if content[x] == '<hr>':
-                    content = content[:x]
-                    break
+            abstract = response.css('div.news-body-content p.news-intro.news_intro::text').extract_first()
+            item['abstract'] = (abstract if abstract else item['title'])
+            content = response.css('div.news-body-content div.news-main p').extract()
             item['content'] = (''.join(content) if content else None)
             if item['content']:
-                if not item['abstract']:
-                    item['abstract'] = re.sub(r'<.*?>','',item['content'][:300]).strip()
-                img_urls = response.css('article p img::attr(src)').extract()
+                img_urls = response.css('div.news-body-content div.news-main img::attr(src)').extract()
                 item['content_img_urls'] = (img_urls if img_urls else None)
                 yield item
         except Exception as e:
