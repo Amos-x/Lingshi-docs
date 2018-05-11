@@ -68,6 +68,7 @@ class ContentClean(object):
         item['content'] = re.sub(r'<script.*?</script>','',content)
         return item
 
+
 class save_to_mysql(object):
     def __init__(self,mysql_host,mysql_username,mysql_password,mysql_db,mysql_port):
         self.host = mysql_host

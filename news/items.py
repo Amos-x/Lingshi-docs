@@ -7,6 +7,7 @@
 
 import scrapy
 
+
 class AllItem(scrapy.Item):
     title = scrapy.Field()                          # 标题
     url = scrapy.Field()                            # 网址

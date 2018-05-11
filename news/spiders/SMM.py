@@ -6,17 +6,15 @@ import urllib.request
 import json
 import re
 
+
 class SmmSpider(scrapy.Spider):
     name = 'SMM'
     serach_urlheaders = 'https://news.smm.cn/news/'
 
     def start_requests(self):
-        # keywords =['铜','铝','铅','锌']
-        type_id = ['01','04']
         print('start crawling SMM...')
-        for id_num in type_id:
-            url = 'https://news.smm.cn/l/%s' %id_num
-            yield scrapy.Request(url,callback=self.next_parse,dont_filter=True)
+        url = 'https://news.smm.cn/'
+        yield scrapy.Request(url,callback=self.next_parse,dont_filter=True)
 
     def _time_judgment(self,str_time):
         now = time.localtime(time.time())
