@@ -31,7 +31,8 @@ class News163Spider(scrapy.Spider):
         item = AllItem()
         item['title'] = response.meta['title']
         item['url'] = response.url
-        item['time'] = response.css('div.post_time_source::text').extract_first().strip()[:19]
+        time = response.css('div.post_time_source::text').extract_first()
+        item['time'] = (time.strip()[:19] if time else None)
         item['msite'] = '163'
         item['source'] = response.css('div.post_time_source a#ne_article_source::text').extract_first()
         item['classify'] = '{}头条热点'.format(response.meta['news_type'])
